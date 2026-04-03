@@ -1,6 +1,8 @@
 [org 0x7C00] ; where bios starts looking
 [bits 16]   ; cpu only works in 16 bit at this point, even if it supports higher later
 
+xor ax, ax ; zero register 
+mov ds, ax ; set starting point to our code at 0 relative to true point, essentially sets it to 7C00
 
 mov si, msg
 
