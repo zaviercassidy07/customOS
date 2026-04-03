@@ -25,10 +25,33 @@ main:
     call newLine
     call newLine
 
+    mov si, prompt
+    call print
+
     jmp .loop
 .loop:
     call getKey
+    cmp al, 0x0A
+    je .process
     jmp .loop
+.process:
+    mov si, lineBuffer
+    mov ax, [bufferIndex]
+    add si, ax
+
+    mov [si], 0
+    mov si, lineBuffer
+    mov byte [bufferIndex], 0
+
+    call print
+    call newLine
+    xor al, al
+
+    mov si, prompt
+    call print
+    
+    jmp .loop
+
 
 print:
     lodsb ; mov al, [si] then inc si
@@ -56,6 +79,10 @@ newLine:
     ret
 
 getKey:
+    mov si, lineBuffer
+    mov ax, [bufferIndex]
+    add si, ax
+
     xor ah, ah
     int 0x16
 
@@ -68,6 +95,9 @@ getKey:
     call newLine
     ret
 .backspace:
+    dec byte [bufferIndex]
+    mov [si], 0
+
     call printChar
     mov al, ' '
     call printChar
@@ -75,10 +105,17 @@ getKey:
     call printChar
     ret
 .else:
+    mov [si], al
+    inc byte [bufferIndex]
     call printChar
     ret
 
 msg db "Kernel Loaded", 0
 msg2 db "Hello, World!", 0
+
+prompt db "Command: ", 0
+
+lineBuffer times 128 db 0
+bufferIndex db 0
 
 times 4096 - ($ - $$) db 0 ; pad code

@@ -7,3 +7,9 @@ Data Segment:Source Index, DS:SI
 Heap: last in first out memory, 
     Stack segment:stack pointer SS:SP
     push puts onto stack, pop retrieves from stack
+
+Functions:
+    Print: prints string stored in si until 0
+    printChar: prints char stored in al
+    newLine: moves cursor to start of line and moves down one line
+    getKey: processes input, adds to buffer and writes to screen. Key is written to al, enter is 0x0A
