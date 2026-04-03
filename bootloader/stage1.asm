@@ -7,7 +7,7 @@ mov es, ax ; zero the two
 mov bx, 0x8000 ; bx contains destination address to load into
 
 mov ah, 0x02 ; code for read operation
-mov al, 1 ; number of sectors to read
+mov al, 4 ; number of sectors to read
 mov ch, 0 ; cylinder number to read
 mov cl, 2 ; sector number, 0 is index, 1 is this one, 2 is next
 mov dh, 0 ; head number to read

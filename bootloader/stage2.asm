@@ -1,22 +1,19 @@
 [org 0x0000] ; no offset for this one
 [bits 16]
 
-mov ax, 0x800
-mov ds, ax ; address to read = ds * 16 + offset, so this sets ds to 0x8000, where we are
+xor ax, ax ; clear ax and es
+mov es, ax
+mov bx, 0x9000
 
-mov si, msg ; put msg in source
+mov ah, 0x02 ; read operation
+mov al, 1 ; amount to read
+mov ch, 0 ; cylinder
+mov cl, 6 ; sector
+mov dh, 0 ; head
 
-.print_char:
-    lodsb ; mov al, [si] then inc si
-    cmp al, 0 ; if terminate
-    je .done
-    mov ah, 0x0E ; write arguement
-    int 0x10 ; bios call
-    jmp .print_char
+int 0x13
 
-.done:
-    jmp $ ; loop
+jmp 0x0900:0000 ; long range jump, it uses x:y = x*16 + y
+; idk why, apparently it just likes long jump more in this context
 
-msg db "Hello, World!", 0
-
-times 512 - ($ - $$) db 0 ; pad code
+times 2048 - ($ - $$) db 0 ; pad code
