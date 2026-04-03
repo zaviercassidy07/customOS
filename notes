@@ -1,0 +1,9 @@
+Code Segment:Instruction Pointer, CS:IP
+    the point of memory where code is executed
+
+Data Segment:Source Index, DS:SI
+    the point in memory where its reading data
+
+Heap: last in first out memory, 
+    Stack segment:stack pointer SS:SP
+    push puts onto stack, pop retrieves from stack
