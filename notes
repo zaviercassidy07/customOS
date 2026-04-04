@@ -13,3 +13,4 @@ Functions:
     printChar: prints char stored in al
     newLine: moves cursor to start of line and moves down one line
     getKey: processes input, adds to buffer and writes to screen. Key is written to al, enter is 0x0A
+    compareString: compares string in si and di, returns al=1 if equal

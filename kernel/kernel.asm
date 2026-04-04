@@ -43,13 +43,51 @@ main:
     mov si, lineBuffer
     mov byte [bufferIndex], 0
 
-    call print
-    call newLine
     xor al, al
+
+    mov di, echo
+    call compareString
+    cmp al, 1
+    je .echo
+    
+    mov si, lineBuffer
+    mov di, clear
+    call compareString
+    cmp al, 1
+    je .clear
+
+    call newLine
+    mov si, prompt
+    call print
+
+    jmp .loop
+.echo:
+    mov si, lineBuffer
+    add si, 5
+    call print
+
+    call newLine
+    mov si, prompt
+    call print
+
+    jmp .loop
+.clear:
+    mov ah, 6
+    mov al, 0
+    mov bh, 0x07
+    mov cx, 0x0000
+    mov dx, 0x184F
+    int 0x10
+
+    mov ah, 0x02
+    mov bh, 0
+    mov dh, 0
+    mov dl, 0
+    int 0x10
 
     mov si, prompt
     call print
-    
+
     jmp .loop
 
 
@@ -110,10 +148,41 @@ getKey:
     call printChar
     ret
 
+compareString:
+    mov al, [si]
+    mov bl, [di]
+
+    cmp al, 0
+    je .done
+    cmp al, 0x20
+    je .done
+
+    cmp al, bl
+    jne .notEqual
+
+    inc si
+    inc di
+    
+    jmp compareString
+.notEqual:
+    mov al, 0
+    ret
+.equal:
+    mov al, 1
+    ret
+.done:
+    cmp al, bl
+    je .equal
+    mov al, 0
+    ret
+
 msg db "Kernel Loaded", 0
 msg2 db "Hello, World!", 0
 
 prompt db "Command: ", 0
+
+echo db "echo "
+clear db "clear", 0
 
 lineBuffer times 128 db 0
 bufferIndex db 0
