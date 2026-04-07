@@ -8,6 +8,11 @@ Heap: last in first out memory,
     Stack segment:stack pointer SS:SP
     push puts onto stack, pop retrieves from stack
 
+GDT: global descriptor table
+    records and describes segments of memory, used to go from 16bit to 32bit
+    In older systems, segments were used, which means you would set a base (start address) and limit (size) for each segment in GDT
+        now, we use paging, so we can set all gdt elements to take the max supported size and base 0, and paging figures it out
+
 Functions:
     Print: prints string stored in si until 0
     printChar: prints char stored in al

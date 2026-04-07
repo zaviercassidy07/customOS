@@ -1,190 +1,131 @@
-; placeholder kernel to test bootloader
-
-[org 0x0000] ; no offset for this one
+[org 0x9000]
 [bits 16]
 
-; set up stack
-mov ax, 0x950
-mov ss, ax
-xor sp, sp
-; stack at ss*16 + sp, so this puts it at 0x9500, a bit above kernel
 
-mov ax, 0x900
-mov ds, ax ; address to read = ds * 16 + offset, so this sets ds to 0x9000, where we are
+cli ; clear interupts, it pauses the bios int codes as they're now unstable
 
-start: ; this label does nothing, just here to clearly show where program starts
-    call main
-    jmp $ ; loop after main completes
+lgdt [gdtr] ; load gdt
 
-main:
-    mov si, msg
+; enable protected mode
+mov eax, cr0 ; cr0 determines whether in protected mode or not, change to 1
+or eax, 1
+mov cr0, eax
+
+jmp 0x08:protected_mode_entry ; 0x08 is now segment where code is stored
+
+[bits 32]
+protected_mode_entry:
+    ; reload data segments
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    mov esp, 0x90000   ; initialize stack
+
+    mov esi, bootMsg
     call print
     call newLine
-    mov si, msg2
-    call print
-    call newLine
-    call newLine
 
-    mov si, prompt
-    call print
-
-    jmp .loop
-.loop:
-    call getKey
-    cmp al, 0x0A
-    je .process
-    jmp .loop
-.process:
-    mov si, lineBuffer
-    mov ax, [bufferIndex]
-    add si, ax
-
-    mov [si], 0
-    mov si, lineBuffer
-    mov byte [bufferIndex], 0
-
-    xor al, al
-
-    mov di, echo
-    call compareString
-    cmp al, 1
-    je .echo
-    
-    mov si, lineBuffer
-    mov di, clear
-    call compareString
-    cmp al, 1
-    je .clear
-
-    call newLine
-    mov si, prompt
-    call print
-
-    jmp .loop
-.echo:
-    mov si, lineBuffer
-    add si, 5
-    call print
-
-    call newLine
-    mov si, prompt
-    call print
-
-    jmp .loop
-.clear:
-    mov ah, 6
-    mov al, 0
-    mov bh, 0x07
-    mov cx, 0x0000
-    mov dx, 0x184F
-    int 0x10
-
-    mov ah, 0x02
-    mov bh, 0
-    mov dh, 0
-    mov dl, 0
-    int 0x10
-
-    mov si, prompt
-    call print
-
-    jmp .loop
-
+    jmp $
 
 print:
-    lodsb ; mov al, [si] then inc si
-    cmp al, 0 ; if terminate
+    mov al, [esi]
+    inc esi
+
+    cmp al, 0
     je .done
+
     call printChar
     jmp print
 .done:
     ret
 
 printChar:
-    mov ah, 0x0E
-    int 0x10
+    push ax
+
+    movzx eax, byte [cursorY]
+    mov ecx, 80
+    mul ecx
+
+    movzx ebx, byte [cursorX]
+    add eax, ebx
+
+    shl eax, 1 ; easy x2
+
+    add eax, [vidMem]
+    mov edi, eax
+
+    pop ax
+
+    mov ah, 0x0F
+    mov [edi], ax
+
+    inc byte [cursorX]
+
+    cmp byte [cursorX], 80
+    jl .done ; jump if less then
+
+    mov byte [cursorX], 0
+    inc byte [cursorY]
+
+    call movCursor
+
+    ret
+.done:
+    call movCursor
+    ret
+
+movCursor:    
+    mov al, byte [cursorY]
+    mov bl, 80
+    mul bl
+    movzx bx, byte [cursorX]
+    add ax, bx
+    mov bx, ax
+
+    mov dx, 0x3D4
+    mov al, 0x0F
+    out dx, al
+
+    mov dx, 0x3D5
+    mov al, bl
+    out dx, al
+
+    mov dx, 0x3D4
+    mov al, 0x0E
+    out dx, al
+
+    mov dx, 0x3D5
+    mov al, bh
+    out dx, al
+
     ret
 
 newLine:
-    mov ah, 0x0E
-    mov al, 0x0D
-    int 0x10 ; print carriage return, moves to start of line
+    inc byte [cursorY]
+    mov byte [cursorX], 0
 
-    mov ah, 0x0E
-    mov al, 0x0A
-    int 0x10 ; prints newline
+    call movCursor
 
     ret
 
-getKey:
-    mov si, lineBuffer
-    mov ax, [bufferIndex]
-    add si, ax
+gdt_start:
+    ; bits are 2 char, bytes in order are base-high, flags and limit-high, access perms, base mid, base mid, base low, limit mid, limit low
+    dq 0x0000000000000000 ; null
+    dq 0x00CF9A000000FFFF ; code (base=0, 4 GB)
+    dq 0x00CF92000000FFFF ; data (base=0, 4 GB)
+gdt_end:
 
-    xor ah, ah
-    int 0x16
+gdtr:
+    dw gdt_end - gdt_start - 1 ; length of gdt - 1
+    dd gdt_start ; start address
 
-    cmp al, 0x0D
-    je .enter
-    cmp al, 0x08
-    je .backspace
-    jne .else
-.enter:
-    call newLine
-    ret
-.backspace:
-    dec byte [bufferIndex]
-    mov [si], 0
+bootMsg db "Kernel loaded", 0
 
-    call printChar
-    mov al, ' '
-    call printChar
-    mov al, 0x08
-    call printChar
-    ret
-.else:
-    mov [si], al
-    inc byte [bufferIndex]
-    call printChar
-    ret
+vidMem dd 0xB8000
+cursorX db 0
+cursorY db 0
 
-compareString:
-    mov al, [si]
-    mov bl, [di]
-
-    cmp al, 0
-    je .done
-    cmp al, 0x20
-    je .done
-
-    cmp al, bl
-    jne .notEqual
-
-    inc si
-    inc di
-    
-    jmp compareString
-.notEqual:
-    mov al, 0
-    ret
-.equal:
-    mov al, 1
-    ret
-.done:
-    cmp al, bl
-    je .equal
-    mov al, 0
-    ret
-
-msg db "Kernel Loaded", 0
-msg2 db "Hello, World!", 0
-
-prompt db "Command: ", 0
-
-echo db "echo "
-clear db "clear", 0
-
-lineBuffer times 128 db 0
-bufferIndex db 0
-
-times 4096 - ($ - $$) db 0 ; pad code
+times 4096 - ($ - $$) db 0
