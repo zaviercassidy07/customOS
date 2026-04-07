@@ -85,14 +85,15 @@ movCursor:
     add ax, bx
     mov bx, ax
 
-    mov dx, 0x3D4
-    mov al, 0x0F
-    out dx, al
+    mov dx, 0x3D4 ; selector port, we write the register we actually want to talk to here
+    mov al, 0x0F ; the register we want to talk to
+    out dx, al ; send data in al out port saved at dx
 
-    mov dx, 0x3D5
-    mov al, bl
-    out dx, al
+    mov dx, 0x3D5 ; receiver port, we send data here which is then sent to the register previously defined
+    mov al, bl ; the data to send
+    out dx, al ; send the data
 
+    ; folowing code repeats this again, vga is old so we send high and low half of register seperately
     mov dx, 0x3D4
     mov al, 0x0E
     out dx, al
