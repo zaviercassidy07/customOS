@@ -13,6 +13,14 @@ GDT: global descriptor table
     In older systems, segments were used, which means you would set a base (start address) and limit (size) for each segment in GDT
         now, we use paging, so we can set all gdt elements to take the max supported size and base 0, and paging figures it out
 
+PIC: Converts interupts to vectors that go to CPU, transfers hardware int to software
+    master and slave pic, this allows more hardware interupts
+    master takes commands and data on port 0x20 and 0x21
+    slave takes commands and data on port 0xA0 and 0xA1
+
+IDT: Interupt descriptor table
+    describes what to do when cpu is interrupted, such as by keyboard input
+
 Functions:
     Print: prints string stored in si until 0
     printChar: prints char stored in al
