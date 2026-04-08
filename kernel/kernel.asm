@@ -70,7 +70,6 @@ printChar:
     cmp byte [cursorX], 80
     jl .done ; jump if less then
 
-    mov byte [cursorXOld], 79 ; store old X in case we go back a line
     mov byte [cursorX], 0
     inc byte [cursorY]
 
@@ -136,43 +135,17 @@ keyboardHandler:
 
     jmp .done
 .enter:
-    mov al, [cursorX]
-    mov byte [cursorXOld], al ; store old X in case we go back a line
-    
     call newLine
     jmp .done
 .back:
     cmp byte [cursorX], 0
-    je .backLine
-
-    dec byte [cursorX]
-    mov al, 0
-    call printChar
-    dec byte [cursorX]
-
-    call movCursor
-
-    jmp .done
-.backLine:
-    cmp byte [cursorY], 0 ; ignore if cursor at 0, 0
     je .done
 
-    dec byte [cursorY]
-    mov al, [cursorXOld]
-    mov byte [cursorX], al
-
-    cmp byte [cursorX], 79
-    je .endLine
-
-    call movCursor
-
-    jmp .done
-.endLine:
+    dec byte [cursorX]
     mov al, 0
     call printChar
+    dec byte [cursorX]
 
-    dec byte [cursorY]
-    mov byte [cursorX], 79
     call movCursor
 
     jmp .done
