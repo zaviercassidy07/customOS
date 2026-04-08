@@ -181,3 +181,113 @@ clear db "clear", 0
 
 lineBuffer times 128 db 0
 bufferIndex db 0
+
+OLD KEYBOARD keyboardHandler
+    movzx ebx, al
+    mov al, [keyMap + ebx] ; add scancode to memory of keyMap, returns coresponding key into al
+    cmp al, 13
+    je .enter
+    cmp al, 8
+    je .back
+    cmp al, 0 ; if key not in keymap
+    je .done
+
+    call printChar
+
+    jmp .done
+.enter:
+    call newLine
+    jmp .done
+.back:
+    cmp byte [cursorX], 0
+    je .done
+
+    dec byte [cursorX]
+    mov al, 0
+    call printChar
+    dec byte [cursorX]
+
+    call movCursor
+
+keyMap db 0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 8, 9, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 13, 0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 59,  39, '`', 0, '\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, 0, 0, 32
+
+print:
+    mov al, [esi]
+    inc esi
+
+    cmp al, 0
+    je .done
+
+    call printChar
+    jmp print
+.done:
+    ret
+
+printChar:
+    push ax
+
+    movzx eax, byte [cursorY]
+    mov ecx, 80
+    mul ecx
+
+    movzx ebx, byte [cursorX]
+    add eax, ebx
+
+    shl eax, 1 ; easy x2
+
+    add eax, 0xB8000
+    mov edi, eax
+
+    pop ax
+
+    mov ah, 0x0F
+    mov [edi], ax
+
+    inc byte [cursorX]
+
+    cmp byte [cursorX], 80
+    jl .done ; jump if less then
+
+    mov byte [cursorX], 0
+    inc byte [cursorY]
+
+    call movCursor
+    ret
+.done:
+    call movCursor
+    ret
+
+movCursor:
+    mov al, byte [cursorY]
+    mov bl, 80
+    mul bl
+    movzx bx, byte [cursorX]
+    add ax, bx
+    mov bx, ax
+
+    mov dx, 0x3D4 ; selector port, we write the register we actually want to talk to here
+    mov al, 0x0F ; the register we want to talk to
+    out dx, al ; send data in al out port saved at dx
+
+    mov dx, 0x3D5 ; receiver port, we send data here which is then sent to the register previously defined
+    mov al, bl ; the data to send
+    out dx, al ; send the data
+
+    ; folowing code repeats this again, vga is old so we send high and low half of register seperately
+    mov dx, 0x3D4
+    mov al, 0x0E
+    out dx, al
+
+    mov dx, 0x3D5
+    mov al, bh
+    out dx, al
+
+    ret
+
+newLine:
+    inc byte [cursorY]
+    mov byte [cursorX], 0
+
+    call movCursor
+
+    ret

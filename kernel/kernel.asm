@@ -1,6 +1,5 @@
-[org 0x9000]
+section .text
 [bits 16]
-
 
 cli ; clear interupts, it pauses the bios int codes as they're now unstable
 
@@ -14,6 +13,7 @@ mov cr0, eax
 jmp 0x08:protected_mode_entry ; 0x08 is now segment where code is stored
 
 [bits 32]
+global protected_mode_entry ; exposes function to the linker
 protected_mode_entry:
     ; reload data segments
     mov ax, 0x10
@@ -27,92 +27,15 @@ protected_mode_entry:
     call initPIC
     call initIDT
 
+    ; define C functions
+    extern print
+    extern keyboardHandlerC
+
     mov esi, bootMsg
+    push esi
     call print
-    call newLine
 
     jmp $
-
-print:
-    mov al, [esi]
-    inc esi
-
-    cmp al, 0
-    je .done
-
-    call printChar
-    jmp print
-.done:
-    ret
-
-printChar:
-    push ax
-
-    movzx eax, byte [cursorY]
-    mov ecx, 80
-    mul ecx
-
-    movzx ebx, byte [cursorX]
-    add eax, ebx
-
-    shl eax, 1 ; easy x2
-
-    add eax, 0xB8000
-    mov edi, eax
-
-    pop ax
-
-    mov ah, 0x0F
-    mov [edi], ax
-
-    inc byte [cursorX]
-
-    cmp byte [cursorX], 80
-    jl .done ; jump if less then
-
-    mov byte [cursorX], 0
-    inc byte [cursorY]
-
-    call movCursor
-    ret
-.done:
-    call movCursor
-    ret
-
-movCursor:
-    mov al, byte [cursorY]
-    mov bl, 80
-    mul bl
-    movzx bx, byte [cursorX]
-    add ax, bx
-    mov bx, ax
-
-    mov dx, 0x3D4 ; selector port, we write the register we actually want to talk to here
-    mov al, 0x0F ; the register we want to talk to
-    out dx, al ; send data in al out port saved at dx
-
-    mov dx, 0x3D5 ; receiver port, we send data here which is then sent to the register previously defined
-    mov al, bl ; the data to send
-    out dx, al ; send the data
-
-    ; folowing code repeats this again, vga is old so we send high and low half of register seperately
-    mov dx, 0x3D4
-    mov al, 0x0E
-    out dx, al
-
-    mov dx, 0x3D5
-    mov al, bh
-    out dx, al
-
-    ret
-
-newLine:
-    inc byte [cursorY]
-    mov byte [cursorX], 0
-
-    call movCursor
-
-    ret
 
 keyboardHandler:
     pushad
@@ -122,31 +45,10 @@ keyboardHandler:
     test al, 0x80
     jnz .done
 
-    movzx ebx, al
-    mov al, [keyMap + ebx] ; add scancode to memory of keyMap, returns coresponding key into al
-    cmp al, 13
-    je .enter
-    cmp al, 8
-    je .back
-    cmp al, 0 ; if key not in keymap
-    je .done
-
-    call printChar
-
-    jmp .done
-.enter:
-    call newLine
-    jmp .done
-.back:
-    cmp byte [cursorX], 0
-    je .done
-
-    dec byte [cursorX]
-    mov al, 0
-    call printChar
-    dec byte [cursorX]
-
-    call movCursor
+    movzx eax, al ; move scancode to EAX
+    push eax ; C functions look off top of stack for arguements
+    call keyboardHandlerC ; call an external function
+    add esp, 4 ; increase stack pointer by 32 bits, effectively removing the arguement from the stack
 
     jmp .done
 .done:
@@ -220,11 +122,9 @@ idtr:
     dw idt_end - idt_start - 1 ; length of idt - 1
     dd idt_start ; same as gdt
 
+section .data
 bootMsg db "Kernel loaded", 0
 inputMsg db "Key", 0
-
 cursorX db 0
 cursorXOld db 0
 cursorY db 0
-
-times 4096 - ($ - $$) db 0
