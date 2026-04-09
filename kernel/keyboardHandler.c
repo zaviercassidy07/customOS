@@ -1,6 +1,6 @@
 #include "keyboardHandler.h"
 
-void keyboardHandlerC (uint8_t scancode)
+void keyboardHandler_c (uint8_t scancode)
 {
     extern char keyMap[128];
     extern void printChar(char character);

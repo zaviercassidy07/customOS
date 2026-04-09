@@ -29,13 +29,13 @@ protected_mode_entry:
 
     ; define C functions
     extern main
-    extern keyboardHandlerC
+    extern keyboardHandler_c
 
     call main
 
     jmp $
 
-keyboardHandler:
+keyboardHandler_asm:
     pushad
 
     in al, 0x60 ; put scancode of keypress in al
@@ -45,7 +45,7 @@ keyboardHandler:
 
     movzx eax, al ; move scancode to EAX
     push eax ; C functions look off top of stack for arguements
-    call keyboardHandlerC ; call an external function
+    call keyboardHandler_c ; call an external function
     add esp, 4 ; increase stack pointer by 32 bits, effectively removing the arguement from the stack
 
     jmp .done
@@ -86,7 +86,7 @@ initPIC:
 
 initIDT:
     ; write keyboard interrupt code
-    mov eax, keyboardHandler
+    mov eax, keyboardHandler_asm
 
     mov word [idt_start + 0x21*8], ax ; move lower half of keyboardHandler address to start of int code
     shr eax, 16 ; move higher half of eax to lower half
