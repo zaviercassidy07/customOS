@@ -30,6 +30,19 @@ void printChar(char character)
     return;
 }
 
+void newLine()
+{
+    extern uint8_t cursorX;
+    extern uint8_t cursorY;
+
+    cursorX = 0;
+    cursorY++;
+
+    moveCursor();
+
+    return;
+}
+
 void moveCursor()
 {
     extern uint8_t cursorX;

@@ -28,12 +28,10 @@ protected_mode_entry:
     call initIDT
 
     ; define C functions
-    extern print
+    extern main
     extern keyboardHandlerC
 
-    mov esi, bootMsg
-    push esi
-    call print
+    call main
 
     jmp $
 
@@ -42,7 +40,7 @@ keyboardHandler:
 
     in al, 0x60 ; put scancode of keypress in al
 
-    test al, 0x80
+    test al, 0x80 ; ignore if key release
     jnz .done
 
     movzx eax, al ; move scancode to EAX

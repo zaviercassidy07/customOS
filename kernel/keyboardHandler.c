@@ -2,5 +2,19 @@
 
 void keyboardHandlerC (uint8_t scancode)
 {
-    // womp womp
+    extern char keyMap[128];
+    extern void printChar(char character);
+
+    char character = keyMap[scancode];
+
+    if(character == 13)
+    {
+        extern void newLine();
+        newLine();
+        return;
+    }
+
+    printChar(character);
+
+    return;
 }
