@@ -119,10 +119,3 @@ idt_end:
 idtr:
     dw idt_end - idt_start - 1 ; length of idt - 1
     dd idt_start ; same as gdt
-
-section .data
-bootMsg db "Kernel loaded", 0
-inputMsg db "Key", 0
-cursorX db 0
-cursorXOld db 0
-cursorY db 0

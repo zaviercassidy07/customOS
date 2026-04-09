@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+extern char keyMap[128];
+extern void printChar(char character);
+
 char buffer[128];
 uint8_t bufferIndex = 0;
 

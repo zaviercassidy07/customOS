@@ -17,9 +17,6 @@ void print(char* string)
 
 void printChar(char character)
 {
-    extern uint8_t cursorX;
-    extern uint8_t cursorY;
-
     char* pos = (char*)(0xB8000 + (cursorY*80 + cursorX)*2);
     pos[0] = character;
     pos[1] = 0x0F;
@@ -32,9 +29,6 @@ void printChar(char character)
 
 void newLine()
 {
-    extern uint8_t cursorX;
-    extern uint8_t cursorY;
-
     cursorX = 0;
     cursorY++;
 
@@ -45,8 +39,6 @@ void newLine()
 
 void moveCursor()
 {
-    extern uint8_t cursorX;
-    extern uint8_t cursorY;
     uint16_t pos = cursorY * 80 + cursorX;
 
     outb(0x3D4, 0x0F);
