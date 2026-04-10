@@ -17,11 +17,23 @@ void print(char* string)
 
 void printChar(char character)
 {
+    if(character == 0)
+    {
+        cursorX--;
+    }
+    if(cursorX == 80)
+    {
+        return;
+    }
+
     char* pos = (char*)(0xB8000 + (cursorY*80 + cursorX)*2);
     pos[0] = character;
     pos[1] = 0x0F;
 
-    cursorX++;
+    if(character != 0)
+    {
+        cursorX++;
+    }
     moveCursor();
 
     return;
@@ -32,6 +44,21 @@ void newLine()
     cursorX = 0;
     cursorY++;
 
+    moveCursor();
+
+    return;
+}
+
+void clearScreen()
+{
+    uint16_t* pos = (uint16_t*)(0xB8000); //do this instead of char as it leaves the text colour byte normal
+    for(int i = 0; i < 80*25; i++)
+    {
+        pos[i] = 0x0F20;
+    }
+
+    cursorX = 0;
+    cursorY = 0;
     moveCursor();
 
     return;

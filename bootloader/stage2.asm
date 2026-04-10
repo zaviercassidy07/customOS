@@ -6,7 +6,7 @@ mov es, ax
 mov bx, 0x9000
 
 mov ah, 0x02 ; read operation
-mov al, 8 ; amount to read
+mov al, 16 ; amount to read
 mov ch, 0 ; cylinder
 mov cl, 6 ; sector
 mov dh, 0 ; head
