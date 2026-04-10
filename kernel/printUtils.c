@@ -17,13 +17,13 @@ void print(char* string)
 
 void printChar(char character)
 {
-    if(character == 0)
-    {
-        cursorX--;
-    }
     if(cursorX == 80)
     {
         return;
+    }
+    if(character == 0)
+    {
+        cursorX--;
     }
 
     char* pos = (char*)(0xB8000 + (cursorY*80 + cursorX)*2);
