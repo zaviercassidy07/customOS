@@ -13,7 +13,15 @@ mov dh, 0 ; head
 
 int 0x13
 
+jc diskError ; if fail for whatever reason
+
 jmp 0x0900:0000 ; long range jump, it uses x:y = x*16 + y
 ; idk why, apparently it just likes long jump more in this context
+
+diskError:
+    mov ah, 0x0E
+    mov al, '!'
+    int 0x10
+    jmp $
 
 times 2048 - ($ - $$) db 0 ; pad code
