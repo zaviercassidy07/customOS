@@ -21,6 +21,9 @@ PIC: Converts interupts to vectors that go to CPU, transfers hardware int to sof
 IDT: Interupt descriptor table
     describes what to do when cpu is interrupted, such as by keyboard input
 
+Paging: a translation layer to access memory. 
+    Allows better organization of memory, compartmentalisation, permissions etc
+
 Functions:
     Print: prints string stored in si until 0
     printChar: prints char stored in al
