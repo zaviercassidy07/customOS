@@ -26,42 +26,80 @@ protected_mode_entry:
 
     call initPaging
 
-    mov word [0xB8000], 0x0F41
+    jmp prepLong
 
-    jmp $
-
-; current paging is 1:1 mapping of virtual to physical memory, really no benefit to paging at this point but it allows expansion later
 initPaging:
-    mov ecx, 1024 ; set up loop to do it 1024 times
-    mov ebx, 0
-    mov edi, page_table
-.fillTable:
+    mov edi, PD_start
+    mov ebx, 0x83
+.fillPD:
     mov eax, ebx
-    or eax, 0x3
-    mov [edi], eax
+    mov [edi], eax ; fill top half with data
+    mov dword [edi + 4], 0 ; fill higher half with 0s
 
-    add edi, 4 ; move up 4 bytes, the length of one entry in table
-    add ebx, 0x1000 ; +4096
-    loop .fillTable ; ecx--, repeat until ecx = 0
+    add ebx, 0x200000 ; add two Mb
+    add edi, 8 ; add 64 bits or one address to pointer
 
-    mov eax, page_table ; page table goes into page directory same way an entry goes in table
-    or eax, 0x3
-    mov [page_directory], eax
+    cmp edi, PD_end ; if not done, loop back
+    jne .fillPD
 
-    mov eax, page_directory
-    mov cr3, eax ; page directory gets stored in cr3
+    mov eax, PD_start
+    or eax, 0x03
+    mov [PDPT], eax
+    mov dword [PDPT + 4], 0 ; again, populating table, fill half with 0s
 
-    mov eax, cr0
-    or eax, 0x80000000 ; when paging bit in cr0 is on, it reads directory from cr3 and enabled paging
-    mov cr0, eax
+    mov eax, PDPT
+    or eax, 0x03
+    mov [PML4], eax
+    mov dword [PML4 + 4], 0
 
     ret
+
+    
+prepLong:
+    mov ebx, cr0
+    and ebx, ~(1 << 31) ; make sure paging bit is disabled (~ is not). must be disabled before we do this
+    mov cr0, ebx
+
+    mov edx, cr4
+    or edx, (1 << 5) ; enable PAE bit
+    mov cr4, edx
+
+    mov ecx, 0xC0000080
+    rdmsr ; read 64 bit register in ecx, split into edx:eax
+    or eax, (1 << 8) ; turn on long mode bit
+    wrmsr ; write into 64 bit register
+
+    mov eax, PML4
+    mov cr3, eax ; store address of PML4
+
+    mov ebx, cr0
+    or ebx, (1 << 31); enable paging again
+    mov cr0, ebx
+
+    jmp 0x18:long_mode_entry
+
+[bits 64]
+long_mode_entry:
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov fs, ax
+    mov gs, ax ; reinit registers
+
+    lea rsp, stack_top ; lea is setting rsp to address of stack top, allows in place operations like adapt to 64 bit
+
+    mov rax, 0x0F540F530F450F54 ; TEST encoded
+    mov [0xB8000], rax ; print
+
+    jmp $
 
 gdt_start:
     ; bytes are 2 char, bytes in order are base-high, flags and limit-high, access perms, base mid, base mid, base low, limit mid, limit low
     dq 0x0000000000000000 ; null
-    dq 0x00CF9A000000FFFF ; code (base=0, 4 GB)
+    dq 0x00CF9A000000FFFF ; code 32bit (base=0, 4 GB)
     dq 0x00CF92000000FFFF ; data (base=0, 4 GB)
+    dq 0x00A09A0000000000 ; code 64bit
 gdt_end:
 
 gdtr:
@@ -69,9 +107,19 @@ gdtr:
     dd gdt_start ; start address
 
 align 4096 ; moves address forward until divisible by 4096, these tables need to be on even address
-page_directory: ; contains pointer to tables
-    times 1024 dd 0
+PML4: ; contains pointer to tables
+    times 512 dq 0
 
 align 4096
-page_table:
-    times 1024 dd 0
+PDPT:
+    times 512 dq 0
+
+align 4096
+PD_start:
+    times 512 dq 0
+PD_end:
+
+section .bss
+stack_bottom:
+    resb 4096
+stack_top:
