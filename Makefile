@@ -17,6 +17,10 @@ OBJECTS=$(ASM_OBJECTS) $(C_OBJECTS)
 
 all: $(OUT)/os.img
 
+clean: 
+	rm -v build/*
+	rm -v out/*
+
 $(BUILD)/stage1.bin: bootloader/stage1.asm 
 	$(ASM) -f bin $< -o $@
 $(BUILD)/stage2.bin: bootloader/stage2.asm 
