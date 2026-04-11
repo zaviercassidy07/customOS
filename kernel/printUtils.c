@@ -7,12 +7,14 @@ static inline void outb(uint16_t port, uint8_t value)
 
 void print(char* string)
 {
-    while(string[0] != 0)
+    *(volatile char*)0xB8000 = 'A';
+    while(1);
+    /*while(string[0] != 0)
     {
         printChar(string[0]);
         string++;
     }
-    return;
+    return;*/
 }
 
 void printChar(char character)
@@ -26,7 +28,7 @@ void printChar(char character)
         cursorX--;
     }
 
-    char* pos = (char*)(0xB8000 + (cursorY*80 + cursorX)*2);
+    char* pos = (char*)(uintptr_t)(0xB8000 + (cursorY*80 + cursorX)*2);
     pos[0] = character;
     pos[1] = 0x0F;
 

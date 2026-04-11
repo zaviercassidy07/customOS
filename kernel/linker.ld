@@ -1,4 +1,4 @@
-ENTRY(protected_mode_entry)
+ENTRY(start)
 
 SECTIONS
 {

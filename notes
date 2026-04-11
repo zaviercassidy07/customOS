@@ -18,6 +18,9 @@ PIC: Converts interupts to vectors that go to CPU, transfers hardware int to sof
     master and slave pic, this allows more hardware interupts
     master takes commands and data on port 0x20 and 0x21
     slave takes commands and data on port 0xA0 and 0xA1
+        slave puts all interupts into a port on master
+    IRQ0-7 goes to master, 8-15 to slave
+    We need to remap it because it overlaps with with CPU exceptions
 
 IDT: Interupt descriptor table
     describes what to do when cpu is interrupted, such as by keyboard input
