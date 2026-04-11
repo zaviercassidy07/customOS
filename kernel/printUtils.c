@@ -26,7 +26,7 @@ void printChar(char character)
         cursorX--;
     }
 
-    char* pos = (char*)(uintptr_t)(0xB8000 + (cursorY*80 + cursorX)*2);
+    char* pos = (char*)(uint64_t)(0xB8000 + (cursorY*80 + cursorX)*2);
     pos[0] = character;
     pos[1] = 0x0F;
 

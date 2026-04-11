@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_HANDLER_H
 #define KEYBOARD_HANDLER_H
 
-#include <stdint.h>
+typedef unsigned char uint8_t;
 
 extern void print(char* string);
 extern void printChar(char character);

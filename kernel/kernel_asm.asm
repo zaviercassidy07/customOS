@@ -28,6 +28,7 @@ protected_mode_entry:
 
     jmp prepLong
 
+; NOTE: This sets up access to 1GB of RAM, however the vm currently only has 128MB
 initPaging:
     mov edi, PD_start
     mov ebx, 0x83

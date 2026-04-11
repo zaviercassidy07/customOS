@@ -1,7 +1,9 @@
 #ifndef PRINT_UTILS_H
 #define PRINT_UTILS_H
 
-#include <stdint.h>
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long long uint64_t;
 
 uint8_t cursorX = 0;
 uint8_t cursorY = 0;
