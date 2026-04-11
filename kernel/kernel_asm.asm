@@ -99,6 +99,8 @@ long_mode_entry:
     mov QWORD [0xB8000], rax ; print
 
     extern main
+    extern keyboardHandler_c
+
     call main
 
     jmp $
@@ -154,33 +156,33 @@ addIDTEntry:
     mov rbx, rdi
     mov rdx, rax
 
-    shl rbx, 4 ; multiply by 16
+    shl rbx, 4 ; multiply by 16 as each index is 16 bytes long (shl is shuffle left)
     add rbx, idt_start ; get start address
 
     ; offset low
     mov ax, dx
-    mov word [rbx], ax
+    mov word [rbx], ax ; store first 16 bits of address
 
     ; selector
-    mov word [rbx + 2], 0x18
+    mov word [rbx + 2], 0x18 ; where in the GDT table the handler function is
 
     ; IST (0) + reserved
-    mov byte [rbx + 4], 0
+    mov byte [rbx + 4], 0 ; reserved byte for standards reasons
 
     ; type = interrupt gate
-    mov byte [rbx + 5], 0x8E
+    mov byte [rbx + 5], 0x8E ; How the interupt is handled, different values can allow recursive interupts etc
 
     ; offset mid
     mov rax, rdx
-    shr rax, 16 ; NEED TO FIGURE OUT WHAT THIS DOES EXACTLY, ACTUALLY NEED TO CHECK WHOLE DATA LAYOUT HERE
-    mov word [rbx + 6], ax
+    shr rax, 16 ; shuffle right 16, ax now has next 16 bits along
+    mov word [rbx + 6], ax ; store another 16 bits
 
     ; offset high
-    shr rax, 16
+    shr rax, 16 ; shuffle another 16 bits, eax will have last 32 bits of handler address
     mov dword [rbx + 8], eax
 
     ; zero
-    mov dword [rbx + 12], 0
+    mov dword [rbx + 12], 0 ; terminating character
 
     ret
 
@@ -199,7 +201,8 @@ keyboardHandler_asm:
     push rax
     in al, 0x60
     
-    mov word [0xB8000], 0x0F4B ; K
+    movzx rdi, al
+    call keyboardHandler_c
 
     mov al, 0x20
     out 0x20, al
