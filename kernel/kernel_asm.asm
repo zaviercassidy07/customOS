@@ -93,11 +93,6 @@ long_mode_entry:
     call initPIC
     call initIDT
 
-    mov rbx, 0x0F540F530F450F54 ; TEST encoded
-    push rbx
-    pop rax
-    mov QWORD [0xB8000], rax ; print
-
     extern main
     extern keyboardHandler_c
 
