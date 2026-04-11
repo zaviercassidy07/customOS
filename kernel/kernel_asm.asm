@@ -98,6 +98,9 @@ long_mode_entry:
     pop rax
     mov QWORD [0xB8000], rax ; print
 
+    extern main
+    call main
+
     jmp $
 
 initPIC:
@@ -226,20 +229,20 @@ idtr: ; same as gdtr
     dw idt_end - idt_start - 1
     dq idt_start
 
+section .bss
 align 4096 ; moves address forward until divisible by 4096, these tables need to be on even address
 PML4: ; contains pointer to tables
-    times 512 dq 0
+    resb 4096
 
 align 4096
 PDPT:
-    times 512 dq 0
+    resb 4096
 
 align 4096
 PD_start:
-    times 512 dq 0
+    resb 4096
 PD_end:
 
-section .bss
 align 16
 stack_bottom:
     resb 8192

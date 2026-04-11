@@ -7,14 +7,12 @@ static inline void outb(uint16_t port, uint8_t value)
 
 void print(char* string)
 {
-    *(volatile char*)0xB8000 = 'A';
-    while(1);
-    /*while(string[0] != 0)
+    while(string[0] != 0)
     {
         printChar(string[0]);
         string++;
     }
-    return;*/
+    return;
 }
 
 void printChar(char character)
