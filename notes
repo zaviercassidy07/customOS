@@ -7,6 +7,7 @@ Data Segment:Source Index, DS:SI
 Heap: last in first out memory, 
     Stack segment:stack pointer SS:SP
     push puts onto stack, pop retrieves from stack
+    Stack pointer starts at top of stack, push lowers it and pop raises it
 
 GDT: global descriptor table
     records and describes segments of memory, used to go from 16bit to 32bit
@@ -17,12 +18,18 @@ PIC: Converts interupts to vectors that go to CPU, transfers hardware int to sof
     master and slave pic, this allows more hardware interupts
     master takes commands and data on port 0x20 and 0x21
     slave takes commands and data on port 0xA0 and 0xA1
+        slave puts all interupts into a port on master
+    IRQ0-7 goes to master, 8-15 to slave
+    We need to remap it because it overlaps with with CPU exceptions
 
 IDT: Interupt descriptor table
     describes what to do when cpu is interrupted, such as by keyboard input
 
 Paging: a translation layer to access memory. 
     Allows better organization of memory, compartmentalisation, permissions etc
+    64 bit allows 5 levels, PML5 (Page Map Level 5), PML4, PDPT (Page descriptor page table), PD and PT
+        we're only using up to PML4
+        by not defining PT, we use PD as the "page size", or size of roughly 2mb instead of 4kb
 
 Functions:
     Print: prints string stored in si until 0
