@@ -28,30 +28,34 @@ protected_mode_entry:
 
     jmp prepLong
 
-; NOTE: This sets up access to 1GB of RAM
+; NOTE: This sets up access to 2MB of RAM
 initPaging:
-    mov edi, PD_start
-    mov ebx, 0x83
-.fillPD:
-    mov eax, ebx
+    mov edi, pt
+    mov eax, 0x3
+
+.fillPT:
     mov [edi], eax ; fill top half with data
     mov dword [edi + 4], 0 ; fill higher half with 0s
 
-    add ebx, 0x200000 ; add two Mb
-    add edi, 8 ; add 64 bits or one address to pointer
+    add edi, 8
+    add eax, 0x1000
+    cmp edi, (pt + 4096)
+    jne .fillPT
 
-    cmp edi, PD_end ; if not done, loop back
-    jne .fillPD
-
-    mov eax, PD_start
+    mov eax, pt
     or eax, 0x03
-    mov [PDPT], eax
-    mov dword [PDPT + 4], 0 ; again, populating table, fill half with 0s
+    mov [pd], eax
+    mov dword [pd + 4], 0
 
-    mov eax, PDPT
+    mov eax, pd
     or eax, 0x03
-    mov [PML4], eax
-    mov dword [PML4 + 4], 0
+    mov [pdpt], eax
+    mov dword [pdpt + 4], 0 ; again, populating table, fill half with 0s
+
+    mov eax, pdpt
+    or eax, 0x03
+    mov [pml4], eax
+    mov dword [pml4 + 4], 0
 
     ret
 
@@ -70,8 +74,8 @@ prepLong:
     or eax, (1 << 8) ; turn on long mode bit
     wrmsr ; write into 64 bit register
 
-    mov eax, PML4
-    mov cr3, eax ; store address of PML4
+    mov eax, pml4
+    mov cr3, eax ; store address of pml4
 
     mov ebx, cr0
     or ebx, (1 << 31); enable paging again
@@ -229,18 +233,25 @@ idtr: ; same as gdtr
     dq idt_start
 
 section .bss
+global pml4 ; expose these addresses to C for later modification
 align 4096 ; moves address forward until divisible by 4096, these tables need to be on even address
-PML4: ; contains pointer to tables
+pml4: ; contains pointer to tables
     resb 4096
 
+global pdpt
 align 4096
-PDPT:
+pdpt:
     resb 4096
 
+global pd
 align 4096
-PD_start:
+pd:
     resb 4096
-PD_end:
+
+global pt
+align 4096
+pt:
+    resb 4096
 
 align 16
 stack_bottom:
