@@ -100,8 +100,6 @@ void processBuffer()
         print("P3 Addr: ");
         printHex((uintptr_t)p3, 1);
         newLine();
-        print(p1);
-        newLine();
         print("Bitmap: ");
         newLine();
         dumpPmmBitmap(0, 40);
@@ -121,8 +119,35 @@ void processBuffer()
         newLine();
         dumpPmmBitmap(0, 40);
         newLine();
+        pmmFreePage(p4);
+        print("Cleared bitmap: ");
+        newLine();
+        dumpPmmBitmap(0, 40);
+        newLine();
 
         print("End PMM Test");
+        newLine();
+    }
+    else if(compareArray(command, "malloc") == 1)
+    {
+        print("Begin malloc test");
+        newLine();
+
+        uintptr_t* a = (uintptr_t*)malloc(16);
+        uintptr_t* b = (uintptr_t*)malloc(32);
+        uintptr_t* c = (uintptr_t*)malloc(8);
+
+        print("A: ");
+        printHex((uintptr_t)a, 1);
+        newLine();
+        print("B: ");
+        printHex((uintptr_t)b, 1);
+        newLine();
+        print("C: ");
+        printHex((uintptr_t)c, 1);
+        newLine();
+
+        print("End malloc test");
         newLine();
     }
     else

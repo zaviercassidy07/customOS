@@ -26,6 +26,15 @@ void initPMM()
     return;
 }
 
+void initHeap()
+{
+    heapStart = (uintptr_t)pmmAlloc();
+    heapPtr = heapStart;
+    heapEnd = heapStart + 4096;
+
+    return;
+}
+
 void* pmmAlloc()
 {
     for(size_t i = 0; i < totalPages; i++)
@@ -46,6 +55,28 @@ void pmmFreePage(void* addr)
     BIT_CLEAR(pmmBitmap, page);
     usedPages--;
     return;
+}
+
+void* malloc(size_t size)
+{
+    size = (size + 7) & ~7; //align to 8 bytes
+
+    if(heapPtr + size > heapEnd)
+    {
+        void* page = pmmAlloc();
+
+        if(!page)
+        {
+            return 0;
+        }
+
+        heapEnd += 4096; //extend heap now that more is allocated
+    }
+
+    void* addr = (void*)heapPtr;
+    heapPtr += size;
+
+    return addr;
 }
 
 void dumpPmmBitmap(int start, int end)

@@ -6,12 +6,14 @@ extern void newLine();
 extern void processBuffer();
 
 extern void initPMM();
+extern void initHeap();
 
 int commandReady = 0;
 
 void main()
 {
     initPMM();
+    initHeap();
 
     print("Kernel Loaded");
     newLine();

@@ -24,10 +24,17 @@ static uint8_t pmmBitmap[262144]; //placeholder, we want it above kernel, but as
 static size_t totalPages = 262144; //1GB of pages (I think)
 static size_t usedPages = 0;
 
+static uintptr_t heapStart;
+static uintptr_t heapEnd;
+static uintptr_t heapPtr;
+
 void initPMM();
+void initHeap();
 
 void* pmmAlloc();
 void pmmFreePage(void* addr);
+
+void* malloc(size_t size);
 
 void dumpPmmBitmap(int start, int end);
 

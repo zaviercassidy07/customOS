@@ -3,6 +3,7 @@
 
 typedef unsigned char uint8_t;
 typedef unsigned long long uintptr_t;
+typedef unsigned long long size_t;
 
 extern void print(char* string);
 extern void printHex(uintptr_t str, int pfx);
@@ -13,6 +14,8 @@ extern void clearScreen();
 extern void* pmmAlloc();
 extern void pmmFreePage(void* addr);
 extern void dumpPmmBitmap(int start, int end);
+
+extern void* malloc(size_t size);
 
 extern int compareArray(char arr1[], char arr2[]);
 
