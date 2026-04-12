@@ -15,11 +15,43 @@ void print(char* string)
     return;
 }
 
+void printHex(uintptr_t str, int pfx)
+{
+    char buf[2 + sizeof(uintptr_t) * 2 + 1]; // 2: 0x, 16 hex digits, 1: \0
+    int pos = 0;
+
+    if(pfx == 1)
+    {
+        buf[pos++] = '0';
+        buf[pos++] = 'x';
+    }
+
+    int started = 0;
+
+    for(int shift = (sizeof(uintptr_t) * 8) - 4; shift >= 0; shift -= 4) // start at 64th bit -4, repeat until 0, move in 4 bit increments
+    {
+        uint8_t nibble = (str >> shift) & 0xF; // move the string so that the part we're up to is at the bottom, and only keep F or 4 bits
+
+        if(nibble != 0 || started || shift == 0)
+        {
+            started = 1;
+            buf[pos++] = hex[nibble]; //use nible as index in our hex array
+        }
+    }
+
+    buf[pos] = 0;
+
+    print(buf);
+
+    return;
+}
+
 void printChar(char character)
 {
     if(cursorX == 80)
     {
-        return;
+        cursorX = 0;
+        cursorY++;
     }
     if(character == 0)
     {

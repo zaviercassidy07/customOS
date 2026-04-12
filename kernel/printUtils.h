@@ -4,11 +4,15 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned long long uint64_t;
+typedef unsigned long long uintptr_t;
 
 uint8_t cursorX = 0;
 uint8_t cursorY = 0;
 
+const char hex[] = "0123456789ABCDEF";
+
 void print(char* string);
+void printHex(uintptr_t str, int pfx);
 void printChar(char character);
 void newLine();
 void clearScreen();

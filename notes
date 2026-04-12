@@ -25,6 +25,8 @@ PIC: Converts interupts to vectors that go to CPU, transfers hardware int to sof
 IDT: Interupt descriptor table
     describes what to do when cpu is interrupted, such as by keyboard input
 
+PMM: Physical memory manager
+
 Paging: a translation layer to access memory. 
     Allows better organization of memory, compartmentalisation, permissions etc
     64 bit allows 5 levels, PML5 (Page Map Level 5), PML4, PDPT (Page descriptor page table), PD and PT

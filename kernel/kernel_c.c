@@ -1,12 +1,18 @@
+typedef unsigned long long uintptr_t;
+
 extern void print(char* string);
 extern void newLine();
 
 extern void processBuffer();
 
+extern void initPMM();
+
 int commandReady = 0;
 
 void main()
 {
+    initPMM();
+
     print("Kernel Loaded");
     newLine();
 

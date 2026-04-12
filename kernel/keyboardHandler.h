@@ -2,11 +2,17 @@
 #define KEYBOARD_HANDLER_H
 
 typedef unsigned char uint8_t;
+typedef unsigned long long uintptr_t;
 
 extern void print(char* string);
+extern void printHex(uintptr_t str, int pfx);
 extern void printChar(char character);
 extern void newLine();
 extern void clearScreen();
+
+extern void* pmmAlloc();
+extern void pmmFreePage(void* addr);
+extern void dumpPmmBitmap(int start, int end);
 
 extern int compareArray(char arr1[], char arr2[]);
 

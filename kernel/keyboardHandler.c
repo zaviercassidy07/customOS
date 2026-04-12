@@ -79,6 +79,52 @@ void processBuffer()
     {
         clearScreen();
     }
+    else if(compareArray(command, "pmm") == 1)
+    {
+        print("Begin PMM Test");
+        newLine();
+
+        print("Initial bitmap: ");
+        newLine();
+        dumpPmmBitmap(0, 40);
+        void* p1 = pmmAlloc();
+        void* p2 = pmmAlloc();
+        void* p3 = pmmAlloc();
+        newLine();
+        print("P1 Addr: ");
+        printHex((uintptr_t)p1, 1);
+        newLine();
+        print("P2 Addr: ");
+        printHex((uintptr_t)p2, 1);
+        newLine();
+        print("P3 Addr: ");
+        printHex((uintptr_t)p3, 1);
+        newLine();
+        print(p1);
+        newLine();
+        print("Bitmap: ");
+        newLine();
+        dumpPmmBitmap(0, 40);
+        newLine();
+        pmmFreePage(p1);
+        pmmFreePage(p2);
+        pmmFreePage(p3);
+        print("Pages freed. Bitmap: ");
+        newLine();
+        dumpPmmBitmap(0, 40);
+        newLine();
+        void* p4 = pmmAlloc();
+        print("P4 Addr (expected P1): ");
+        printHex((uintptr_t)p4, 1);
+        newLine();
+        print("Current bitmap: ");
+        newLine();
+        dumpPmmBitmap(0, 40);
+        newLine();
+
+        print("End PMM Test");
+        newLine();
+    }
     else
     {
         print("Not recognized");
