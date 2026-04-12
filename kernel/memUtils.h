@@ -11,16 +11,32 @@
 #define BIT_CLEAR(b, i) (b[(i)/8] &= ~(1 << ((i)%8)))
 #define BIT_TEST(b, i) (b[(i)/8] & (1 << ((i)%8)))
 
+//define page attributes
+#define PAGE_PRESENT (1 << 0)
+#define PAGE_WRITABLE (1 << 1)
+#define PAGE_HUGE (1 << 7)
+
 typedef unsigned char uint8_t;
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
 typedef unsigned long long size_t;
 typedef unsigned long long uintptr_t;
+
+typedef uint64_t pml4_t;
+typedef uint64_t pdpt_t;
+typedef uint64_t pd_t;
+typedef uint64_t pt_t;
+
+extern pml4_t pml4[1024];
+extern pdpt_t pdpt[1024];
+extern pd_t pd[1024];
 
 extern char _kernel_start;
 extern char _kernel_end;
 
 extern void printHex(uintptr_t str, int pfx);
 
-static uint8_t pmmBitmap[262144]; //placeholder, we want it above kernel, but as close to as possible
+static uint8_t pmmBitmap[262144];
 static size_t totalPages = 262144; //1GB of pages (I think)
 static size_t usedPages = 0;
 
@@ -33,6 +49,9 @@ void initHeap();
 
 void* pmmAlloc();
 void pmmFreePage(void* addr);
+
+void vMap(uintptr_t virt, uintptr_t phys);
+void vUMap(uintptr_t virt);
 
 void* malloc(size_t size);
 

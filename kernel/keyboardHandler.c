@@ -133,9 +133,11 @@ void processBuffer()
         print("Begin malloc test");
         newLine();
 
-        uintptr_t* a = (uintptr_t*)malloc(16);
-        uintptr_t* b = (uintptr_t*)malloc(32);
-        uintptr_t* c = (uintptr_t*)malloc(8);
+        char* a = (char*)malloc(2048);
+        uintptr_t* b = (uintptr_t*)malloc(1024);
+        uintptr_t* c = (uintptr_t*)malloc(2048);
+        uintptr_t* d = (uintptr_t*)malloc(12);
+        uintptr_t* e = (uintptr_t*)malloc(29);
 
         print("A: ");
         printHex((uintptr_t)a, 1);
@@ -145,6 +147,18 @@ void processBuffer()
         newLine();
         print("C: ");
         printHex((uintptr_t)c, 1);
+        newLine();
+        print("D: ");
+        printHex((uintptr_t)d, 1);
+        newLine();
+        print("E: ");
+        printHex((uintptr_t)e, 1);
+        newLine();
+
+        a = "PASS";
+
+        print("A content test: ");
+        print(a);
         newLine();
 
         print("End malloc test");

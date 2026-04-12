@@ -28,9 +28,11 @@ void initPMM()
 
 void initHeap()
 {
-    heapStart = (uintptr_t)pmmAlloc();
+    heapStart = 0x400000; //i don't think this matters too much, just needs to be away from other things
     heapPtr = heapStart;
     heapEnd = heapStart + 4096;
+
+    vMap(heapStart, (uintptr_t)pmmAlloc());
 
     return;
 }
@@ -57,6 +59,53 @@ void pmmFreePage(void* addr)
     return;
 }
 
+void vMap(uintptr_t virt, uintptr_t phys)
+{
+    // first 36 bits show address, 9 for each PML4, PDPT, PD and PT, but we have no PT so those bits are offset too
+    uint64_t pml4Index = (virt >> 39) & 0x1FF; //0x1FF is only first 9 bits
+    uint64_t pdptIndex = (virt >> 30) & 0x1FF;
+    uint64_t pdIndex = (virt >> 21) & 0x1FF;
+    uint64_t ptIndex = (virt >> 12) & 0x1FF;
+
+    if(!(pml4[pml4Index] & PAGE_PRESENT))
+    {
+        pdpt_t* newPdpt = (pdpt_t*)pmmAlloc();
+        for(int i = 0; i < 512; i++)
+        {
+            newPdpt[i] = 0;
+        }
+        pml4[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
+    }
+    if(!(pdpt[pdptIndex] & PAGE_PRESENT))
+    {
+        pd_t* newPd = (pd_t*)pmmAlloc();
+        for(int i = 0; i < 512; i++)
+        {
+            newPd[i] = 0;
+        }
+        pdpt[pdptIndex] = (uintptr_t)newPd | PAGE_PRESENT | PAGE_WRITABLE;
+    }
+    if(!(pd[pdIndex] & PAGE_PRESENT))
+    {
+        pt_t* newPt = (pt_t*)pmmAlloc();
+        for(int i = 0; i < 512; i++)
+        {
+            newPt[i] = 0;
+        }
+        pd[pdIndex] = (uintptr_t)newPt | PAGE_PRESENT | PAGE_WRITABLE;
+    }
+
+    pt_t* pt = (pt_t*)(pd[pdIndex] & 0x000FFFFFFFFFF000); // the & part keeps only the physical address
+
+    uintptr_t allignedPhys = phys & ~0x1FFFFF;
+    uintptr_t allignedVirt = virt & ~0x1FFFFF;
+    pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE;
+
+    //invlpg is "invalidate page", clears cache about that page
+    asm volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
+}
+void vUMap(uintptr_t virt);
+
 void* malloc(size_t size)
 {
     size = (size + 7) & ~7; //align to 8 bytes
@@ -69,6 +118,8 @@ void* malloc(size_t size)
         {
             return 0;
         }
+
+        vMap(heapEnd, (uintptr_t)page);
 
         heapEnd += 4096; //extend heap now that more is allocated
     }
