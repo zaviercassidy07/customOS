@@ -26,6 +26,7 @@ IDT: Interupt descriptor table
     describes what to do when cpu is interrupted, such as by keyboard input
 
 PMM: Physical memory manager
+VMM: Virtual memory manager
 
 Paging: a translation layer to access memory. 
     Allows better organization of memory, compartmentalisation, permissions etc

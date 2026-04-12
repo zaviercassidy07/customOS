@@ -2,13 +2,26 @@
 
 void initPMM()
 {
-    for(size_t i = 0; i < 256; i++) //this needs to change if kernel is bigger than 1MB
+    uintptr_t kernelStart = (uintptr_t)&_kernel_start; //use & as we need address of this symbol
+    uintptr_t kernelEnd = (uintptr_t)&_kernel_end;
+
+    kernelStart &= ~(PAGE_SIZE - 1); //4096 = 0x1000, 4096 - 1 = 0x0FFF, & ~(0x0FFF) means offset bits are zeroed out, and we round down to 4096
+    kernelEnd = (kernelEnd + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); //rounds up by pushing it into the next page then rounding down
+
+    size_t startPage = kernelStart / PAGE_SIZE;
+    size_t endPage = kernelEnd / PAGE_SIZE;
+
+    for(size_t i = startPage; i < endPage; i++) //reserve kernel space, probably overlap between this and first MB
     {
         BIT_SET(pmmBitmap, i);
     }
-    for(size_t i = 256; i < totalPages; i++)
+    for(size_t i = endPage; i < totalPages; i++) //mark the rest available
     {
         BIT_CLEAR(pmmBitmap, i);
+    }
+    for(size_t i = 0; i < 0x100000 / PAGE_SIZE; i++) //reserve first MB as a lot of system stuff is there
+    {
+        BIT_SET(pmmBitmap, i);
     }
     return;
 }

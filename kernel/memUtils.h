@@ -15,9 +15,12 @@ typedef unsigned char uint8_t;
 typedef unsigned long long size_t;
 typedef unsigned long long uintptr_t;
 
+extern char _kernel_start;
+extern char _kernel_end;
+
 extern void printHex(uintptr_t str, int pfx);
 
-static uint8_t* pmmBitmap = (uint8_t*)0x100000; //placeholder, we want it above kernel, but as close to as possible
+static uint8_t pmmBitmap[262144]; //placeholder, we want it above kernel, but as close to as possible
 static size_t totalPages = 262144; //1GB of pages (I think)
 static size_t usedPages = 0;
 
