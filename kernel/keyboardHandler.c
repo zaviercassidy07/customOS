@@ -137,7 +137,8 @@ void processBuffer()
         uintptr_t* b = (uintptr_t*)malloc(1024);
         uintptr_t* c = (uintptr_t*)malloc(2048);
         uintptr_t* d = (uintptr_t*)malloc(12);
-        uintptr_t* e = (uintptr_t*)malloc(29);
+        uintptr_t* e = (uintptr_t*)malloc(5000);
+        uintptr_t* f = (uintptr_t*)malloc(30);
 
         print("A: ");
         printHex((uintptr_t)a, 1);
@@ -154,6 +155,10 @@ void processBuffer()
         print("E: ");
         printHex((uintptr_t)e, 1);
         newLine();
+        print("F: ");
+        printHex((uintptr_t)f, 1);
+        newLine();
+
 
         a = "PASS";
 
