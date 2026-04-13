@@ -100,14 +100,34 @@ void vMap(uintptr_t virt, uintptr_t phys)
     }
     pt_t* pt = (pt_t*)(pd[pdIndex] & ADDR_MASK); // the & part keeps only the physical address
 
-    uintptr_t allignedPhys = phys & ~0x1FFF;
-    uintptr_t allignedVirt = virt & ~0x1FFF;
+    uintptr_t allignedPhys = phys & ~0xFFF;
+    uintptr_t allignedVirt = virt & ~0xFFF;
     pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE;
 
     //invlpg is "invalidate page", clears cache about that page
     asm volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
 }
-void vUMap(uintptr_t virt);
+void vUMap(uintptr_t virt)
+{
+    uint64_t pml4Index = (virt >> 39) & 0x1FF; //0x1FF is only first 9 bits
+    uint64_t pdptIndex = (virt >> 30) & 0x1FF;
+    uint64_t pdIndex = (virt >> 21) & 0x1FF;
+    uint64_t ptIndex = (virt >> 12) & 0x1FF;
+
+    pdpt_t* pdpt = (pdpt_t*)(pml4[pml4Index] & ADDR_MASK);
+    pd_t* pd = (pd_t*)(pdpt[pdptIndex] & ADDR_MASK);
+    pt_t* pt = (pt_t*)(pd[pdIndex] & ADDR_MASK);
+
+    uintptr_t phys = pt[ptIndex] & ADDR_MASK;
+    pmmFreePage((void*)phys);
+
+    pt[ptIndex] = 0;
+
+    uintptr_t allignedVirt = virt & ~0xFFF;
+    asm volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
+
+    return;
+}
 
 void* malloc(size_t size)
 {
