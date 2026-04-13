@@ -133,7 +133,7 @@ void* malloc(size_t size)
 {
     size = (size + 7) & ~7; //align to 8 bytes
 
-    if(heapPtr + size > heapEnd)
+    while(heapPtr + size > heapEnd)
     {
         void* page = pmmAlloc();
 

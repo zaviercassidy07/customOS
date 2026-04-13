@@ -238,17 +238,14 @@ align 4096 ; moves address forward until divisible by 4096, these tables need to
 pml4: ; contains pointer to tables
     resb 4096
 
-global pdpt
 align 4096
 pdpt:
     resb 4096
 
-global pd
 align 4096
 pd:
     resb 4096
 
-global pt
 align 4096
 pt:
     resb 4096
