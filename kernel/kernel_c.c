@@ -1,7 +1,6 @@
 typedef unsigned long long uintptr_t;
 
 extern void print(char* string);
-extern void newLine();
 
 extern void processBuffer();
 
@@ -15,8 +14,7 @@ void main()
     initPMM();
     initHeap();
 
-    print("Kernel Loaded");
-    newLine();
+    print("Kernel Loaded\n");
 
     while(1 == 1)
     {

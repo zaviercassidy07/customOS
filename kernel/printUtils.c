@@ -57,6 +57,12 @@ void printChar(char character)
     {
         cursorX--;
     }
+    if(character == '\n')
+    {
+        newLine();
+        moveCursor();
+        return;
+    }
 
     char* pos = (char*)(uint64_t)(0xB8000 + (cursorY*80 + cursorX)*2);
     pos[0] = character;
