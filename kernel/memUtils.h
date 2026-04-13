@@ -61,6 +61,7 @@ void vMap(uintptr_t virt, uintptr_t phys);
 void vUMap(uintptr_t virt);
 
 void* malloc(size_t size);
+void free(uintptr_t addr);
 
 void dumpPmmBitmap(int start, int end);
 

@@ -10,7 +10,7 @@ void keyboardHandler_c(uint8_t scancode)
     }
     if(character == 13) //enter
     {
-        newLine();
+        print("\n");
         commandReady = 1; //apparently interupts need to be small, moved rest of function into main
         return;
     }
@@ -73,7 +73,7 @@ void processBuffer()
     if(compareArray(command, "echo") == 1)
     {
         print(options);
-        newLine();
+        print("\n");
     }
     else if(compareArray(command, "clear") == 1)
     {
@@ -81,57 +81,42 @@ void processBuffer()
     }
     else if(compareArray(command, "pmm") == 1)
     {
-        print("Begin PMM Test");
-        newLine();
+        print("Begin PMM Test\n");
 
-        print("Initial bitmap: ");
-        newLine();
+        print("Initial bitmap: \n");
         dumpPmmBitmap(0, 40);
         void* p1 = pmmAlloc();
         void* p2 = pmmAlloc();
         void* p3 = pmmAlloc();
-        newLine();
-        print("P1 Addr: ");
+        print("\nP1 Addr: ");
         printHex((uintptr_t)p1, 1);
-        newLine();
-        print("P2 Addr: ");
+        print("\nP2 Addr: ");
         printHex((uintptr_t)p2, 1);
-        newLine();
-        print("P3 Addr: ");
+        print("\nP3 Addr: ");
         printHex((uintptr_t)p3, 1);
-        newLine();
-        print("Bitmap: ");
-        newLine();
+        print("\nBitmap: \n");
         dumpPmmBitmap(0, 40);
-        newLine();
+        print("\n");
         pmmFreePage(p1);
         pmmFreePage(p2);
         pmmFreePage(p3);
-        print("Pages freed. Bitmap: ");
-        newLine();
+        print("Pages freed. Bitmap: \n");
         dumpPmmBitmap(0, 40);
-        newLine();
+        print("\n");
         void* p4 = pmmAlloc();
         print("P4 Addr (expected P1): ");
         printHex((uintptr_t)p4, 1);
-        newLine();
-        print("Current bitmap: ");
-        newLine();
+        print("\nCurrent bitmap: \n");
         dumpPmmBitmap(0, 40);
-        newLine();
         pmmFreePage(p4);
-        print("Cleared bitmap: ");
-        newLine();
+        print("\nCleared bitmap: \n");
         dumpPmmBitmap(0, 40);
-        newLine();
 
-        print("End PMM Test");
-        newLine();
+        print("\nEnd PMM Test\n");
     }
     else if(compareArray(command, "malloc") == 1)
     {
-        print("Begin malloc test");
-        newLine();
+        print("Begin malloc test\n");
 
         char* a = (char*)malloc(2048);
         uintptr_t* b = (uintptr_t*)malloc(1024);
@@ -142,37 +127,36 @@ void processBuffer()
 
         print("A: ");
         printHex((uintptr_t)a, 1);
-        newLine();
-        print("B: ");
+        print("\nB: ");
         printHex((uintptr_t)b, 1);
-        newLine();
-        print("C: ");
+        print("\nC: ");
         printHex((uintptr_t)c, 1);
-        newLine();
-        print("D: ");
+        print("\nD: ");
         printHex((uintptr_t)d, 1);
-        newLine();
-        print("E: ");
+        print("\nE: ");
         printHex((uintptr_t)e, 1);
-        newLine();
-        print("F: ");
+        print("\nF: ");
         printHex((uintptr_t)f, 1);
-        newLine();
 
+        strCopy("A CONTENT", a);
 
-        a = "PASS";
-
-        print("A content test: ");
+        print("\nA content test: ");
         print(a);
-        newLine();
 
-        print("End malloc test");
-        newLine();
+        free((uintptr_t)c);
+        char* g = (char*)malloc(512);
+        strCopy("G TEST", g);
+
+        print("\nG Addr (expect C): ");
+        printHex((uintptr_t)g, 1);
+        print("\nG content: ");
+        print(g);
+
+        print("\nEnd malloc test\n");
     }
     else
     {
-        print("Not recognized");
-        newLine();
+        print("Not recognized\n");
     }
 
     clearBuffer();

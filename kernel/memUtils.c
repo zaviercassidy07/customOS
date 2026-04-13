@@ -186,6 +186,13 @@ void* malloc(size_t size)
     return addr;
 }
 
+void free(uintptr_t addr)
+{
+    blockHeader_t* cur = (blockHeader_t*)(addr - sizeof(blockHeader_t));
+    cur->free = 1;
+    return;
+}
+
 void dumpPmmBitmap(int start, int end)
 {
     for(size_t i = start; i < end; i++) //prints only selected section
