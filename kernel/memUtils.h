@@ -27,6 +27,13 @@ typedef uint64_t pdpt_t;
 typedef uint64_t pd_t;
 typedef uint64_t pt_t;
 
+typedef struct blockHeader_t
+{
+    size_t size; 
+    int free;
+    struct blockHeader_t* next;
+} blockHeader_t;
+
 extern pml4_t pml4[1024];
 
 extern char _kernel_start;
@@ -41,6 +48,8 @@ static size_t usedPages = 0;
 static uintptr_t heapStart;
 static uintptr_t heapEnd;
 static uintptr_t heapPtr;
+blockHeader_t* heapHead;
+blockHeader_t* heapTail;
 
 void initPMM();
 void initHeap();

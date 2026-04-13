@@ -34,6 +34,8 @@ void initHeap()
 
     vMap(heapStart, (uintptr_t)pmmAlloc());
 
+    heapHead = NULL;
+
     return;
 }
 
@@ -133,22 +135,53 @@ void* malloc(size_t size)
 {
     size = (size + 7) & ~7; //align to 8 bytes
 
-    while(heapPtr + size > heapEnd)
-    {
-        void* page = pmmAlloc();
+    blockHeader_t* cur = heapHead; //create pointer to start of chain
 
+    while (cur) // while its not null
+    {
+        if(cur->free == 1 && cur->size >= size) //if its free and bit enough
+        {
+            cur->free = 0; //now its not free
+            //change cur size later
+
+            return (void*)(cur + 1); //return this one
+        }
+        cur = cur->next; //if its not free or big enough, move to next in chain
+    }
+
+    size_t totalSize = sizeof(blockHeader_t) + size; //total size is header plus requested size
+    if(heapPtr + totalSize > heapEnd) //if too big
+    {
+        void* page = pmmAlloc(); //get more
         if(!page)
         {
-            return 0;
+            return NULL;
         }
 
         vMap(heapEnd, (uintptr_t)page);
-
-        heapEnd += 4096; //extend heap now that more is allocated
+        heapEnd += 4096;
     }
 
-    void* addr = (void*)heapPtr;
-    heapPtr += size;
+    //if no existing block is good, make new one at heapPtr
+    blockHeader_t* block = (blockHeader_t*)heapPtr; 
+    block->size = size;
+    block->free = 0;
+    block->next = NULL;
+
+    if(!heapHead) //if there is no beginning of chain, this is now beginning of chain
+    {
+        heapHead = block;
+        heapTail = block;
+    }
+    else
+    {
+        heapTail->next = block; //if chain does exist, add this to end
+        heapTail = block;
+    }
+
+    heapPtr += totalSize; //move heapPtr
+
+    void* addr = (void*)(block + 1); //return the address just past the header
 
     return addr;
 }
