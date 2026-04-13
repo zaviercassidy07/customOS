@@ -107,7 +107,7 @@ void vMap(uintptr_t virt, uintptr_t phys)
     pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE;
 
     //invlpg is "invalidate page", clears cache about that page
-    asm volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
+    __asm__ volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
 }
 void vUMap(uintptr_t virt)
 {
@@ -126,7 +126,7 @@ void vUMap(uintptr_t virt)
     pt[ptIndex] = 0;
 
     uintptr_t allignedVirt = virt & ~0xFFF;
-    asm volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
+    __asm__ volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
 
     return;
 }
