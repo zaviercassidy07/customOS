@@ -100,6 +100,7 @@ long_mode_entry:
 
     extern main
     extern keyboardHandler_c
+    extern printHex
 
     call main
 
@@ -191,7 +192,15 @@ gp_fault:
     cli
     hlt
 page_fault:
-    mov word [0xB8000], 0x0F50 ; P
+    mov word [0xB8000], 0x0F50 ; PAGE
+    mov word [0xB8002], 0x0F41
+    mov word [0xB8004], 0x0F47
+    mov word [0xB8006], 0x0F45
+
+    mov rdi, cr2
+    mov rsi, 1
+    call printHex
+
     mov al, 0x20
     out 0x20, al
     cli
