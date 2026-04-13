@@ -76,6 +76,8 @@ void vMap(uintptr_t virt, uintptr_t phys)
         }
         pml4[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
     }
+    pdpt_t* pdpt = (pdpt_t*)(pml4[pml4Index] & ADDR_MASK);
+
     if(!(pdpt[pdptIndex] & PAGE_PRESENT))
     {
         pd_t* newPd = (pd_t*)pmmAlloc();
@@ -85,6 +87,8 @@ void vMap(uintptr_t virt, uintptr_t phys)
         }
         pdpt[pdptIndex] = (uintptr_t)newPd | PAGE_PRESENT | PAGE_WRITABLE;
     }
+    pd_t* pd = (pd_t*)(pdpt[pdptIndex] & ADDR_MASK);
+
     if(!(pd[pdIndex] & PAGE_PRESENT))
     {
         pt_t* newPt = (pt_t*)pmmAlloc();
@@ -94,12 +98,11 @@ void vMap(uintptr_t virt, uintptr_t phys)
         }
         pd[pdIndex] = (uintptr_t)newPt | PAGE_PRESENT | PAGE_WRITABLE;
     }
+    pt_t* pt = (pt_t*)(pd[pdIndex] & ADDR_MASK); // the & part keeps only the physical address
 
-    pt_t* pt = (pt_t*)(pd[pdIndex] & 0x000FFFFFFFFFF000); // the & part keeps only the physical address
-
-    uintptr_t allignedPhys = phys & ~0x1FFFFF;
-    uintptr_t allignedVirt = virt & ~0x1FFFFF;
-    pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE;
+    uintptr_t allignedPhys = phys & ~0x1FFF;
+    uintptr_t allignedVirt = virt & ~0x1FFF;
+    pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE;
 
     //invlpg is "invalidate page", clears cache about that page
     asm volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");

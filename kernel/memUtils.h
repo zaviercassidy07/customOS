@@ -14,7 +14,7 @@
 //define page attributes
 #define PAGE_PRESENT (1 << 0)
 #define PAGE_WRITABLE (1 << 1)
-#define PAGE_HUGE (1 << 7)
+#define ADDR_MASK 0xFFFFFFFFFF000
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
@@ -28,8 +28,6 @@ typedef uint64_t pd_t;
 typedef uint64_t pt_t;
 
 extern pml4_t pml4[1024];
-extern pdpt_t pdpt[1024];
-extern pd_t pd[1024];
 
 extern char _kernel_start;
 extern char _kernel_end;
