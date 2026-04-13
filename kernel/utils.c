@@ -19,3 +19,15 @@ int compareArray(char* str1, char* str2)
     }
     return 0;
 }
+
+void strCopy(char* str, char* addr)
+{
+    while(str[0] != 0)
+    {
+        addr[0] = str[0];
+        str++;
+        addr++;
+    }
+    addr[0] = 0;
+    return;
+}
