@@ -53,9 +53,10 @@ void printChar(char character)
         cursorX = 0;
         cursorY++;
     }
-    if(character == 0)
+    if(character == '\b')
     {
         cursorX--;
+        character = 0;
     }
     if(character == '\n')
     {

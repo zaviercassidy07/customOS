@@ -22,7 +22,7 @@ void keyboardHandler_c(uint8_t scancode)
         }
 
         bufferIndex--;
-        printChar(0);
+        printChar('\b');
         buffer[bufferIndex] = 0;
         return;
     }

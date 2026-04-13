@@ -201,9 +201,13 @@ keyboardHandler_asm:
     push rax
     in al, 0x60
     
+    cmp al, 0x80 ; if greater than 0x80, probably key release so ignore. May have to change this later
+    ja .done
+
     movzx rdi, al
     call keyboardHandler_c
 
+.done:
     mov al, 0x20
     out 0x20, al
 
