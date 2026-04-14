@@ -41,13 +41,13 @@ extern char _kernel_end;
 
 extern void printHex(uintptr_t str, int pfx);
 
-static uint8_t pmmBitmap[262144];
-static size_t totalPages = 262144; //1GB of pages (I think)
-static size_t usedPages = 0;
+uint8_t pmmBitmap[262144];
+size_t totalPages = 262144; //1GB of pages (I think)
+size_t usedPages = 0;
 
-static uintptr_t heapStart;
-static uintptr_t heapEnd;
-static uintptr_t heapPtr;
+uintptr_t heapStart;
+uintptr_t heapEnd;
+uintptr_t heapPtr;
 blockHeader_t* heapHead;
 blockHeader_t* heapTail;
 
@@ -64,5 +64,5 @@ void* malloc(size_t size);
 void free(uintptr_t addr);
 
 void dumpPmmBitmap(int start, int end);
-
+extern void print(char* string);
 #endif

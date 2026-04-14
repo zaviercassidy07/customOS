@@ -79,41 +79,6 @@ void processBuffer()
     {
         clearScreen();
     }
-    else if(compareArray(command, "pmm") == 1)
-    {
-        print("Begin PMM Test\n");
-
-        print("Initial bitmap: \n");
-        dumpPmmBitmap(0, 40);
-        void* p1 = pmmAlloc();
-        void* p2 = pmmAlloc();
-        void* p3 = pmmAlloc();
-        print("\nP1 Addr: ");
-        printHex((uintptr_t)p1, 1);
-        print("\nP2 Addr: ");
-        printHex((uintptr_t)p2, 1);
-        print("\nP3 Addr: ");
-        printHex((uintptr_t)p3, 1);
-        print("\nBitmap: \n");
-        dumpPmmBitmap(0, 40);
-        print("\n");
-        pmmFreePage(p1);
-        pmmFreePage(p2);
-        pmmFreePage(p3);
-        print("Pages freed. Bitmap: \n");
-        dumpPmmBitmap(0, 40);
-        print("\n");
-        void* p4 = pmmAlloc();
-        print("P4 Addr (expected P1): ");
-        printHex((uintptr_t)p4, 1);
-        print("\nCurrent bitmap: \n");
-        dumpPmmBitmap(0, 40);
-        pmmFreePage(p4);
-        print("\nCleared bitmap: \n");
-        dumpPmmBitmap(0, 40);
-
-        print("\nEnd PMM Test\n");
-    }
     else if(compareArray(command, "malloc") == 1)
     {
         print("Begin malloc test\n");

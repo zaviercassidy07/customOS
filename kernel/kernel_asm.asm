@@ -28,7 +28,7 @@ protected_mode_entry:
 
     jmp prepLong
 
-; NOTE: This sets up access to 2MB of RAM
+; NOTE: This sets up access to 1MB of RAM
 initPaging:
     mov edi, pt
     mov eax, 0x3
@@ -39,7 +39,7 @@ initPaging:
 
     add edi, 8
     add eax, 0x1000
-    cmp edi, (pt + 4096)
+    cmp edi, (pt + 4096) ; 4096 for 2MB access, change for more or less
     jne .fillPT
 
     mov eax, pt
@@ -100,6 +100,7 @@ long_mode_entry:
 
     extern main
     extern keyboardHandler_c
+    extern print
     extern printHex
 
     call main
@@ -188,7 +189,9 @@ addIDTEntry:
     ret
 
 gp_fault:
-    mov word [0xB8000], 0x0F47 ; G
+    mov word [0xB8000], 0x0F47 ; GP
+    ;mov word [0xB8002], 0x0F50
+
     cli
     hlt
 page_fault:

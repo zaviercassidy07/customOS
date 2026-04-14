@@ -19,16 +19,22 @@ void initPMM()
     {
         BIT_CLEAR(pmmBitmap, i);
     }
-    for(size_t i = 0; i < 0x100000 / PAGE_SIZE; i++) //reserve first MB as a lot of system stuff is there
+    for(size_t i = 0; i < 0x200000 / PAGE_SIZE; i++) //reserve first 2MB as a lot of system stuff is there: HACK SOLUTION, NEED TO MAKE DYNAMIC
     {
         BIT_SET(pmmBitmap, i);
     }
+    printHex(kernelEnd, 1);
+    print("\n");
     return;
 }
 
 void initHeap()
 {
-    heapStart = 0x400000; //i don't think this matters too much, just needs to be away from other things
+    heapStart = 0x100000; //1MB, should be safe for now
+    if(heapStart < ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF) //if its in the kernel
+    {
+        heapStart = ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF; //putit 4KB above kernel and align it
+    }
     heapPtr = heapStart;
     heapEnd = heapStart + 4096;
 
@@ -63,6 +69,12 @@ void pmmFreePage(void* addr)
 
 void vMap(uintptr_t virt, uintptr_t phys)
 {
+    print("\nMapping V=");
+    printHex(virt, 1);
+    print("\nMapping P=");
+    printHex(phys, 1);
+    print("\n");
+
     // first 36 bits show address, 9 for each PML4, PDPT, PD and PT, but we have no PT so those bits are offset too
     uint64_t pml4Index = (virt >> 39) & 0x1FF; //0x1FF is only first 9 bits
     uint64_t pdptIndex = (virt >> 30) & 0x1FF;
@@ -141,8 +153,23 @@ void* malloc(size_t size)
     {
         if(cur->free == 1 && cur->size >= size) //if its free and bit enough
         {
+            if(cur->size >= 32 + size) //if at least 8 bits after header, create new header so memory is usable
+            {
+                blockHeader_t* split = (blockHeader_t*)((uintptr_t)cur + sizeof(blockHeader_t) + size);
+                split->free = 1;
+                split->size = cur->size - sizeof(blockHeader_t) - size;
+                
+                split->next = cur->next;
+                cur->next = split;
+                
+                if(heapTail == cur)
+                {
+                    heapTail = split;
+                }
+
+                cur->size = size;
+            }
             cur->free = 0; //now its not free
-            //change cur size later
 
             return (void*)(cur + 1); //return this one
         }
@@ -150,7 +177,7 @@ void* malloc(size_t size)
     }
 
     size_t totalSize = sizeof(blockHeader_t) + size; //total size is header plus requested size
-    if(heapPtr + totalSize > heapEnd) //if too big
+    while(heapPtr + totalSize > heapEnd) //if too big
     {
         void* page = pmmAlloc(); //get more
         if(!page)
