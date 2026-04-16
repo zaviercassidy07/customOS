@@ -12,7 +12,9 @@ uint8_t cursorY = 0;
 const char hex[] = "0123456789ABCDEF";
 
 void print(char* string);
+void printLine(char* string, uint8_t line);
 void printHex(uintptr_t str, int pfx);
+void printLineHex(uintptr_t str, int pfx, uint8_t line);
 void printChar(char character);
 void newLine();
 void clearScreen();

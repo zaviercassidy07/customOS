@@ -79,45 +79,80 @@ void processBuffer()
     {
         clearScreen();
     }
-    else if(compareArray(command, "malloc") == 1)
+    else if(compareArray(command, "heap") == 1)
     {
-        print("Begin malloc test\n");
+        clearScreen();
+        print("HEAP TEST START\n");
 
-        char* a = (char*)malloc(2048);
-        uintptr_t* b = (uintptr_t*)malloc(1024);
-        uintptr_t* c = (uintptr_t*)malloc(2048);
-        uintptr_t* d = (uintptr_t*)malloc(12);
-        uintptr_t* e = (uintptr_t*)malloc(5000);
-        uintptr_t* f = (uintptr_t*)malloc(30);
+        //alloc tests
+        print("\n[1] Sequential alloc\n");
 
-        print("A: ");
-        printHex((uintptr_t)a, 1);
-        print("\nB: ");
-        printHex((uintptr_t)b, 1);
-        print("\nC: ");
-        printHex((uintptr_t)c, 1);
-        print("\nD: ");
-        printHex((uintptr_t)d, 1);
-        print("\nE: ");
-        printHex((uintptr_t)e, 1);
-        print("\nF: ");
-        printHex((uintptr_t)f, 1);
+        void* a = malloc(256);
+        void* b = malloc(256);
+        void* c = malloc(256);
 
-        strCopy("A CONTENT", a);
+        print("A: "); printHex((uintptr_t)a, 1); print("\n");
+        print("B: "); printHex((uintptr_t)b, 1); print("\n");
+        print("C: "); printHex((uintptr_t)c, 1); print("\n");
 
-        print("\nA content test: ");
-        print(a);
+        //free + reuse
+        print("\n[2] Free + reuse\n");
 
+        free((uintptr_t)b);
+        void* b2 = malloc(200);
+
+        print("B2: "); printHex((uintptr_t)b2, 1); print("\n");
+
+        //merge test
+        print("\n[3] Merge test\n");
+
+        free((uintptr_t)a);
+        free((uintptr_t)b2);
         free((uintptr_t)c);
-        char* g = (char*)malloc(512);
-        strCopy("G TEST", g);
 
-        print("\nG Addr (expect C): ");
-        printHex((uintptr_t)g, 1);
-        print("\nG content: ");
-        print(g);
+        void* big = malloc(700);
+        print("BIG: "); printHex((uintptr_t)big, 1); print("\n");
 
-        print("\nEnd malloc test\n");
+        //fragmentation test
+        print("\n[4] Fragmentation\n");
+
+        void* f1 = malloc(128);
+        void* f2 = malloc(128);
+        void* f3 = malloc(128);
+        void* f4 = malloc(128);
+
+        free((uintptr_t)f1);
+        free((uintptr_t)f3);
+
+        void* f5 = malloc(200);
+
+        print("F5: "); printHex((uintptr_t)f5, 1); print("\n");
+
+        //Heap stress
+        print("\n[5] Stress alloc\n\n");
+        uint64_t allocated = 1156;
+        void* last = (uintptr_t)0;
+
+        for(int i = 0; i < 242920; i++) //just under 1GB total
+        {
+            last = malloc(4096);
+
+            if(!last)
+            {
+                print("ALLOC FAIL\n");
+                break;
+            }
+
+            if(i % 512 == 0)
+            {
+                printLineHex((uintptr_t)last, 1, 17);
+            }
+
+            allocated += 4096;
+        }
+        print("Total allocated: ");
+        printHex(allocated, 1);
+        print("\n\nHEAP TEST END\n");
     }
     else
     {

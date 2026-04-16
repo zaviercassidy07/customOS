@@ -39,8 +39,37 @@ initPaging:
 
     add edi, 8
     add eax, 0x1000
-    cmp edi, (pt + 4096) ; 4096 for 2MB access, change for more or less
+    cmp edi, (pt + 4096) ; 4096 for 2MB access, change for less
     jne .fillPT
+
+    ;Zero all entries of tables, then we add in what we use
+    mov edi, pd
+    xor eax, eax
+    mov ecx, 512
+.zeroPD:
+    mov [edi], eax
+    mov [edi + 4], eax
+    add edi, 8
+    dec ecx
+    jnz .zeroPD
+
+    mov edi, pdpt
+    mov ecx, 512
+.zeroPDPT:
+    mov [edi], eax
+    mov [edi + 4], eax
+    add edi, 8
+    dec ecx
+    jnz .zeroPDPT
+
+    mov edi, pml4Phys
+    mov ecx, 512
+.zeroPML4:
+    mov [edi], eax
+    mov [edi + 4], eax
+    add edi, 8
+    dec ecx
+    jnz .zeroPML4
 
     mov eax, pt
     or eax, 0x03
@@ -54,8 +83,8 @@ initPaging:
 
     mov eax, pdpt
     or eax, 0x03
-    mov [pml4], eax
-    mov dword [pml4 + 4], 0
+    mov [pml4Phys], eax
+    mov dword [pml4Phys + 4], 0
 
     ret
 
@@ -74,7 +103,7 @@ prepLong:
     or eax, (1 << 8) ; turn on long mode bit
     wrmsr ; write into 64 bit register
 
-    mov eax, pml4
+    mov eax, pml4Phys
     mov cr3, eax ; store address of pml4
 
     mov ebx, cr0
@@ -95,6 +124,7 @@ long_mode_entry:
     mov rsp, stack_top
     and rsp, -16
 
+    call reinitPaging
     call initPIC
     call initIDT
 
@@ -102,10 +132,55 @@ long_mode_entry:
     extern keyboardHandler_c
     extern print
     extern printHex
+    extern newLine
 
     call main
 
     jmp $
+
+reinitPaging:
+    mov rdi, pt
+    mov rax, 0x3
+
+.refillPT:
+    mov [rdi], rax
+
+    add rdi, 8
+    add rax, 0x1000
+    cmp rdi, (pt + 4096)
+    jne .refillPT
+
+    mov rdi, pt1
+    mov rax, 0x200003
+
+.fillPT1:
+    mov [rdi], rax
+
+    add rdi, 8
+    add rax, 0x1000
+    cmp rdi, (pt1 + 4096)
+    jne .fillPT1
+
+    mov rax, pt
+    or rax, 0x3
+    mov [pd], rax
+
+    mov rax, pt1
+    or rax, 0x3
+    mov [pd + 8], rax
+
+    mov rax, pd
+    or rax, 0x3
+    mov [pdpt], rax
+
+    mov rax, pdpt
+    or rax, 0x3
+    mov [pml4Phys], rax
+
+    mov rax, pml4Phys
+    mov cr3, rax
+
+    ret
 
 initPIC:
     mov al, 0x11 ; init begin command
@@ -189,17 +264,22 @@ addIDTEntry:
     ret
 
 gp_fault:
-    mov word [0xB8000], 0x0F47 ; GP
-    ;mov word [0xB8002], 0x0F50
+    mov word [0xB8000], 0x4F47 ; GP
+    mov word [0xB8002], 0x4F50
 
     cli
     hlt
 page_fault:
-    mov word [0xB8000], 0x0F50 ; PAGE
-    mov word [0xB8002], 0x0F41
-    mov word [0xB8004], 0x0F47
-    mov word [0xB8006], 0x0F45
+    mov word [0xB8000], 0x4F50 ; PAGE
+    mov word [0xB8002], 0x4F41
+    mov word [0xB8004], 0x4F47
+    mov word [0xB8006], 0x4F45
 
+    call newLine
+    mov rdi, [rsp]
+    mov rsi, 1
+    call printHex
+    call newLine
     mov rdi, cr2
     mov rsi, 1
     call printHex
@@ -249,9 +329,9 @@ idtr: ; same as gdtr
     dq idt_start
 
 section .bss
-global pml4 ; expose these addresses to C for later modification
+global pml4Phys ; expose these addresses to C for later modification
 align 4096 ; moves address forward until divisible by 4096, these tables need to be on even address
-pml4: ; contains pointer to tables
+pml4Phys: ; contains pointer to tables
     resb 4096
 
 align 4096
@@ -264,6 +344,10 @@ pd:
 
 align 4096
 pt:
+    resb 4096
+
+align 4096
+pt1:
     resb 4096
 
 align 16

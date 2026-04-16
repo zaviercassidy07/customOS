@@ -2,11 +2,14 @@
 #define KEYBOARD_HANDLER_H
 
 typedef unsigned char uint8_t;
+typedef unsigned long long uint64_t;
 typedef unsigned long long uintptr_t;
 typedef unsigned long long size_t;
 
 extern void print(char* string);
+extern void printLine(char* string, uint8_t line);
 extern void printHex(uintptr_t str, int pfx);
+extern void printLineHex(uintptr_t str, int pfx, uint8_t line);
 extern void printChar(char character);
 extern void clearScreen();
 
