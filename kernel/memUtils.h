@@ -64,6 +64,7 @@ void* pmmAlloc();
 void pmmFreePage(void* addr);
 
 void reloadCr3();
+void invlpg(uintptr_t addr);
 uintptr_t* tmpMap(uintptr_t virt, uint64_t page);
 
 void vMap(uintptr_t virt, uintptr_t phys);

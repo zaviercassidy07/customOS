@@ -97,6 +97,13 @@ void reloadCr3()
 {
     __asm__ volatile ("mov %0, %%cr3" : : "r"(pml4Phys) : "memory");
 }
+
+//invlpg is "invalidate page", clears cache about that page
+void invlpg(uintptr_t addr)
+{
+    __asm__ volatile ("invlpg (%0)" : : "r"(addr) : "memory");
+}
+
 uintptr_t* tmpMap(uintptr_t virt, uint64_t page)
 {
     if(page == 0)
@@ -127,8 +134,7 @@ uintptr_t* tmpMap(uintptr_t virt, uint64_t page)
 
     pt[ptIndex] = (virt & ~0xFFF) | PAGE_PRESENT | PAGE_WRITABLE;
 
-    reloadCr3();
-    //__asm__ volatile ("invlpg (%0)" : : "r"((uintptr_t)page) : "memory");
+    invlpg((uintptr_t)page);
 
     return (uintptr_t*)page;
 }
@@ -140,6 +146,9 @@ void vMap(uintptr_t virt, uintptr_t phys)
         print("\nERROR: Low address\n");
         return;
     }
+
+    uintptr_t allignedPhys = phys & ~0xFFF;
+    uintptr_t allignedVirt = virt & ~0xFFF;
 
     // first 36 bits show address, 9 for each PML4, PDPT, PD and PT, but we have no PT so those bits are offset too
     uint64_t pml4Index = (virt >> 39) & 0x1FF; //0x1FF is only first 9 bits
@@ -204,12 +213,9 @@ void vMap(uintptr_t virt, uintptr_t phys)
 
     pt_t* pt = (pt_t*)tmpMap((pd[pdIndex] & ADDR_MASK), 3); // the & part keeps only the physical address
 
-    uintptr_t allignedPhys = phys & ~0xFFF;
-    uintptr_t allignedVirt = virt & ~0xFFF;
     pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE;
 
-    //invlpg is "invalidate page", clears cache about that page
-    __asm__ volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
+    invlpg(allignedVirt);
 }
 void vUMap(uintptr_t virt)
 {
@@ -228,7 +234,7 @@ void vUMap(uintptr_t virt)
     pt[ptIndex] = 0;
 
     uintptr_t allignedVirt = virt & ~0xFFF;
-    __asm__ volatile("invlpg (%0)" ::"r"(allignedVirt) : "memory");
+    invlpg(allignedVirt);
 
     return;
 }
@@ -315,7 +321,7 @@ void* malloc(size_t size)
     //Make sure page with header is mapped
     for(uintptr_t page = blockStartPage; page <= blockLastPage; page += PAGE_SIZE)
     {
-        if(isMapped(page) == 0 || page == 0x3300000 || page == 0x1FCFF000) //no idea why but this page here seems to always dodge being allocated
+        if(isMapped(page) == 0 || page == 0x3300000 || page == 0x1FCFF000) //no idea why but these pages here seems to always dodge being allocated
         {
             void* phys = pmmAlloc();
             if(!phys)
