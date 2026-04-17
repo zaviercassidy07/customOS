@@ -104,41 +104,6 @@ void invlpg(uintptr_t addr)
     __asm__ volatile ("invlpg (%0)" : : "r"(addr) : "memory");
 }
 
-uintptr_t* tmpMap(uintptr_t virt, uint64_t page)
-{
-    if(page == 0)
-    {
-        page = TMP0;
-    }
-    else if(page == 1)
-    {
-        page = TMP1;
-    }
-    else if(page == 2)
-    {
-        page = TMP2;
-    }
-    else
-    {
-        page = TMP3;
-    }
-
-    uint64_t pml4Index = (page >> 39) & 0x1FF;
-    uint64_t pdptIndex = (page >> 30) & 0x1FF;
-    uint64_t pdIndex = (page >> 21) & 0x1FF;
-    uint64_t ptIndex = (page >> 12) & 0x1FF;
-
-    pdpt_t* pdpt = (pdpt_t*)(pml4Phys[pml4Index] & ADDR_MASK);
-    pd_t* pd = (pd_t*)(pdpt[pdptIndex] & ADDR_MASK);
-    pt_t* pt = (pt_t*)(pd[pdIndex] & ADDR_MASK);
-
-    pt[ptIndex] = (virt & ~0xFFF) | PAGE_PRESENT | PAGE_WRITABLE;
-
-    invlpg((uintptr_t)page);
-
-    return (uintptr_t*)page;
-}
-
 void vMap(uintptr_t virt, uintptr_t phys)
 {
     if(virt < 0x400000ULL)
@@ -163,16 +128,16 @@ void vMap(uintptr_t virt, uintptr_t phys)
         {
             print("\nError: PMM ALLOC FAILED\n");
         }
+        pml4Phys[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
+        reloadCr3();
 
-        uintptr_t* tmp = tmpMap((uintptr_t)newPdpt, 0);
+        uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
         for(int i = 0; i < 512; i++)
         {
             tmp[i] = 0;
         }
-        pml4Phys[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
-        reloadCr3();
     }
-    pdpt_t* pdpt = (pdpt_t*)tmpMap((pml4Phys[pml4Index] & ADDR_MASK), 1);
+    pdpt_t* pdpt = (pdpt_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
 
     if(!(pdpt[pdptIndex] & PAGE_PRESENT))
     {
@@ -181,17 +146,17 @@ void vMap(uintptr_t virt, uintptr_t phys)
         {
             print("\nError: PMM ALLOC FAILED\n");
         }
+        pdpt[pdptIndex] = (uintptr_t)newPd | PAGE_PRESENT | PAGE_WRITABLE;
+        reloadCr3();
 
-        uintptr_t* tmp = tmpMap((uintptr_t)newPd, 0);
+        uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
         for(int i = 0; i < 512; i++)
         {
             tmp[i] = 0;
         }
 
-        pdpt[pdptIndex] = (uintptr_t)newPd | PAGE_PRESENT | PAGE_WRITABLE;
-        reloadCr3();
     }
-    pd_t* pd = (pd_t*)tmpMap((pdpt[pdptIndex] & ADDR_MASK), 2);
+    pd_t* pd = (pd_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
 
     if(!(pd[pdIndex] & PAGE_PRESENT))
     {
@@ -200,18 +165,18 @@ void vMap(uintptr_t virt, uintptr_t phys)
         {
             print("\nError: PMM ALLOC FAILED\n");
         }
+        pd[pdIndex] = (uintptr_t)newPt | PAGE_PRESENT | PAGE_WRITABLE;
+        reloadCr3();
 
-        uintptr_t* tmp = tmpMap((uintptr_t)newPt, 0);
+        uintptr_t* tmp = (uintptr_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12 );
         for(int i = 0; i < 512; i++)
         {
             tmp[i] = 0;
         }
 
-        pd[pdIndex] = (uintptr_t)newPt | PAGE_PRESENT | PAGE_WRITABLE;
-        reloadCr3();
     }
 
-    pt_t* pt = (pt_t*)tmpMap((pd[pdIndex] & ADDR_MASK), 3); // the & part keeps only the physical address
+    pt_t* pt = (pt_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12);
 
     pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE;
 
@@ -256,19 +221,19 @@ int isMapped(uintptr_t virt)
         return 0;
     }
 
-    pdpt_t* pdpt = (pdpt_t*)tmpMap(pml4Phys[pml4Index] & ADDR_MASK, 1);
+    pdpt_t* pdpt = (pdpt_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | RECUR_INDEX << 12);
     if(!(pdpt[pdptIndex] & PAGE_PRESENT))
     {
         return 0;
     }
 
-    pd_t* pd = (pd_t*)tmpMap(pdpt[pdptIndex] & ADDR_MASK, 2);
+    pd_t* pd = (pd_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
     if(!(pd[pdIndex] & PAGE_PRESENT))
     {
         return 0;
     }
 
-    pt_t* pt = (pt_t*)tmpMap(pd[pdIndex] & ADDR_MASK, 3);
+    pt_t* pt = (pt_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12);
     if(!(pt[ptIndex] & PAGE_PRESENT))
     {
         return 0;

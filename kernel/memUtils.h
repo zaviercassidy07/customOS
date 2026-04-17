@@ -16,10 +16,8 @@
 #define PAGE_WRITABLE (1 << 1)
 #define ADDR_MASK 0xFFFFFFFFFF000
 
-#define TMP0 0x0000ULL
-#define TMP1 0x1000ULL
-#define TMP2 0x2000ULL
-#define TMP3 0x3000ULL
+#define RECUR 0xFFFFFF0000000000ULL
+#define RECUR_INDEX 510ULL
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
@@ -65,7 +63,6 @@ void pmmFreePage(void* addr);
 
 void reloadCr3();
 void invlpg(uintptr_t addr);
-uintptr_t* tmpMap(uintptr_t virt, uint64_t page);
 
 void vMap(uintptr_t virt, uintptr_t phys);
 void vUMap(uintptr_t virt);

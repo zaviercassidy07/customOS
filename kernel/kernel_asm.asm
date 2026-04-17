@@ -178,6 +178,10 @@ reinitPaging:
     mov [pml4Phys], rax
 
     mov rax, pml4Phys
+    or rax, 0x3
+    mov [pml4Phys + 4080], rax
+
+    mov rax, pml4Phys
     mov cr3, rax
 
     ret

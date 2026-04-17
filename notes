@@ -33,6 +33,10 @@ Paging: a translation layer to access memory.
     64 bit allows 5 levels, PML5 (Page Map Level 5), PML4, PDPT (Page descriptor page table), PD and PT
         we're only using up to PML4
         by not defining PT, we use PD as the "page size", or size of roughly 2mb instead of 4kb
+    Recursive paging: We use the first 9 bits of the address (48 bits) to point to PML4
+        this essentially moves everything up one, so PD acts as PT, the entries in PD are now treated as pages, instead of links to another table
+        this then maps the PT tables, so we have access to the physical memory that they are at
+        it can be repeated, so mapping 18 bits treats PD tables as entries, so we can access PT tables and this repeats to access all levels
 
 Functions:
     Print: prints string stored in si until 0
