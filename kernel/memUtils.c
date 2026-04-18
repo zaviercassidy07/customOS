@@ -8,9 +8,6 @@ void initPMM()
     kernelStart &= ~(PAGE_SIZE - 1); //4096 = 0x1000, 4096 - 1 = 0x0FFF, & ~(0x0FFF) means offset bits are zeroed out, and we round down to 4096
     kernelEnd = (kernelEnd + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); //rounds up by pushing it into the next page then rounding down
 
-    kernelStart -= 0xFFFFFF8000000000;
-    kernelEnd -= 0xFFFFFF8000000000;
-
     size_t startPage = kernelStart / PAGE_SIZE;
     size_t endPage = kernelEnd / PAGE_SIZE;
 
@@ -32,7 +29,7 @@ void initPMM()
 
 void initHeap()
 {
-    heapStart = 0; //Heap can be right at bottom with virtual high kernel
+    heapStart = 0x400000; //Heap can be right at bottom with virtual high kernel
     if(heapStart < ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF) //if its in the kernel
     {
         heapStart = ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF; //putit 4KB above kernel and align it
