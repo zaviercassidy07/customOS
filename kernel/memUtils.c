@@ -8,6 +8,9 @@ void initPMM()
     kernelStart &= ~(PAGE_SIZE - 1); //4096 = 0x1000, 4096 - 1 = 0x0FFF, & ~(0x0FFF) means offset bits are zeroed out, and we round down to 4096
     kernelEnd = (kernelEnd + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); //rounds up by pushing it into the next page then rounding down
 
+    kernelStart -= 0xFFFFFF8000000000;
+    kernelEnd -= 0xFFFFFF8000000000;
+
     size_t startPage = kernelStart / PAGE_SIZE;
     size_t endPage = kernelEnd / PAGE_SIZE;
 
@@ -29,7 +32,7 @@ void initPMM()
 
 void initHeap()
 {
-    heapStart = 0x400000; //4MB, should be safe for now, just outside mapped region
+    heapStart = 0; //Heap can be right at bottom with virtual high kernel
     if(heapStart < ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF) //if its in the kernel
     {
         heapStart = ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF; //putit 4KB above kernel and align it
@@ -106,12 +109,6 @@ void invlpg(uintptr_t addr)
 
 void vMap(uintptr_t virt, uintptr_t phys)
 {
-    if(virt < 0x400000ULL)
-    {
-        print("\nERROR: Low address\n");
-        return;
-    }
-
     uintptr_t allignedPhys = phys & ~0xFFF;
     uintptr_t allignedVirt = virt & ~0xFFF;
 
@@ -121,14 +118,15 @@ void vMap(uintptr_t virt, uintptr_t phys)
     uint64_t pdIndex = (virt >> 21) & 0x1FF;
     uint64_t ptIndex = (virt >> 12) & 0x1FF;
 
-    if(!(pml4Phys[pml4Index] & PAGE_PRESENT))
+    pml4_t* pml4 = (pml4_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | RECUR_INDEX << 12);
+    if(!(pml4[pml4Index] & PAGE_PRESENT))
     {
         pdpt_t* newPdpt = (pdpt_t*)pmmAlloc();
         if(newPdpt == NULL)
         {
             print("\nError: PMM ALLOC FAILED\n");
         }
-        pml4Phys[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
+        pml4[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
         reloadCr3();
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
@@ -189,9 +187,10 @@ void vUMap(uintptr_t virt)
     uint64_t pdIndex = (virt >> 21) & 0x1FF;
     uint64_t ptIndex = (virt >> 12) & 0x1FF;
 
-    pdpt_t* pdpt = (pdpt_t*)(pml4Phys[pml4Index] & ADDR_MASK);
-    pd_t* pd = (pd_t*)(pdpt[pdptIndex] & ADDR_MASK);
-    pt_t* pt = (pt_t*)(pd[pdIndex] & ADDR_MASK);
+    pml4_t* pml4 = (pml4_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | RECUR_INDEX << 12);
+    pdpt_t* pdpt = (pdpt_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
+    pd_t* pd = (pd_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
+    pt_t* pt = (pt_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12);
 
     uintptr_t phys = pt[ptIndex] & ADDR_MASK;
     pmmFreePage((void*)phys);
@@ -216,7 +215,8 @@ int isMapped(uintptr_t virt)
     uint64_t pdIndex = (virt >> 21) & 0x1FF;
     uint64_t ptIndex = (virt >> 12) & 0x1FF;
 
-    if(!(pml4Phys[pml4Index] & PAGE_PRESENT))
+    pml4_t* pml4 = (pml4_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | RECUR_INDEX << 12);
+    if(!(pml4[pml4Index] & PAGE_PRESENT))
     {
         return 0;
     }
