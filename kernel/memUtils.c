@@ -218,7 +218,7 @@ int isMapped(uintptr_t virt)
         return 0;
     }
 
-    pdpt_t* pdpt = (pdpt_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | RECUR_INDEX << 12);
+    pdpt_t* pdpt = (pdpt_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
     if(!(pdpt[pdptIndex] & PAGE_PRESENT))
     {
         return 0;
@@ -247,6 +247,7 @@ void* malloc(size_t size)
 
     blockHeader_t* cur = heapHead; //create pointer to start of chain
 
+    //check if any existing blocks are suitable
     while (cur) // while its not null
     {
         if(cur->free == 1 && cur->size >= size) //if its free and bit enough
@@ -274,6 +275,7 @@ void* malloc(size_t size)
         cur = cur->next; //if its not free or big enough, move to next in chain
     }
 
+    //if not, we need to make a new one
     size_t totalSize = sizeof(blockHeader_t) + size;
 
     uintptr_t blockStartPage = heapPtr & ~0xFFFULL;
