@@ -133,6 +133,7 @@ long_mode_entry:
     extern print
     extern printHex
     extern newLine
+    extern clearScreen
 
     call main
 
@@ -274,19 +275,25 @@ gp_fault:
     cli
     hlt
 page_fault:
+    ;call clearScreen
+
     mov word [0xB8000], 0x4F50 ; PAGE
     mov word [0xB8002], 0x4F41
     mov word [0xB8004], 0x4F47
     mov word [0xB8006], 0x4F45
 
     call newLine
-    mov rdi, [rsp]
+    pop rdi
     mov rsi, 1
-    call printHex
+    call printHex ; print specific error, 0x2 is trying to access unmapped page
+    call newLine
+    pop rdi
+    mov rsi, 1
+    call printHex ; print EXACTLY what the CPU was trying to do when fault occured
     call newLine
     mov rdi, cr2
     mov rsi, 1
-    call printHex
+    call printHex ; print address that causes fault
 
     mov al, 0x20
     out 0x20, al
