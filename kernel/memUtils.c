@@ -352,6 +352,11 @@ void mergeBlocks()
             oldCur->size = oldCur->size + cur->size + sizeof(blockHeader_t);
             oldCur->next = cur->next;
 
+            if(heapTail == cur)
+            {
+                heapTail = oldCur;
+            }
+
             cur = cur->next;
         }
         else
