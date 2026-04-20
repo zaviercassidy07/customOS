@@ -83,7 +83,7 @@ void pmmFreePage(void* addr)
 {
     size_t page = (uintptr_t)addr / PAGE_SIZE;
 
-    if(nextFree < page)
+    if(page < nextFree)
     {
         nextFree = page;
     }
@@ -202,11 +202,6 @@ void vUMap(uintptr_t virt)
 
 int isMapped(uintptr_t virt)
 {
-    if(virt < 0x400000ULL)
-    {
-        return 1; //this region is identity mapped
-    }
-
     uint64_t pml4Index = (virt >> 39) & 0x1FF;
     uint64_t pdptIndex = (virt >> 30) & 0x1FF;
     uint64_t pdIndex = (virt >> 21) & 0x1FF;
@@ -285,7 +280,7 @@ void* malloc(size_t size)
     //Make sure page with header is mapped
     for(uintptr_t page = blockStartPage; page <= blockLastPage; page += PAGE_SIZE)
     {
-        if(isMapped(page) == 0 || page == 0x3300000 || page == 0x1FCFF000) //no idea why but these pages here seems to always dodge being allocated
+        if(isMapped(page)) //no idea why but these pages here seems to always dodge being allocated
         {
             void* phys = pmmAlloc();
             if(!phys)
@@ -355,6 +350,7 @@ void mergeBlocks()
             if(heapTail == cur)
             {
                 heapTail = oldCur;
+                return;
             }
 
             cur = cur->next;
