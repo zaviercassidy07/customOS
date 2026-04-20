@@ -2,7 +2,7 @@
 
 int compareArray(char* str1, char* str2)
 {
-    for(int i = 0; i <= 128; i++)
+    for(int i = 0; i < 128; i++)
     {
         if(str1[i] == str2[i])
         {
