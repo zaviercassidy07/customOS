@@ -280,7 +280,7 @@ void* malloc(size_t size)
     //Make sure page with header is mapped
     for(uintptr_t page = blockStartPage; page <= blockLastPage; page += PAGE_SIZE)
     {
-        if(isMapped(page)) //no idea why but these pages here seems to always dodge being allocated
+        if(isMapped(page) == 0) //no idea why but these pages here seems to always dodge being allocated
         {
             void* phys = pmmAlloc();
             if(!phys)
