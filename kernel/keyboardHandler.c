@@ -82,7 +82,14 @@ void processBuffer()
     else if(compareArray(command, "heap") == 1)
     {
         clearScreen();
-        print("HEAP TEST START\n");
+        print("HEAP TEST START\n\n");
+
+        /*uintptr_t* m1 = (uintptr_t*)malloc(4096);
+        print("Data start: "); printHex((uintptr_t)m1, 1); print("\n\n");
+        uintptr_t* m2 = (uintptr_t*)malloc(4096);
+        print("Data start: "); printHex((uintptr_t)m2, 1); print("\n\n");
+        uintptr_t* m3 = (uintptr_t*)malloc(4096);
+        print("Data start: "); printHex((uintptr_t)m3, 1); print("\n\n");*/
 
         uint64_t allocated = 0;
         uintptr_t* last = (uintptr_t*)0;
@@ -97,6 +104,14 @@ void processBuffer()
                 break;
             }
 
+            if(i % 64 == 0)
+            {
+                printLineHex((uintptr_t)last, 1, 15);
+            }
+            if(i % 256 == 0)
+            {
+                printLineHex((uintptr_t)last, 1, 16);
+            }
             if(i % 512 == 0)
             {
                 printLineHex((uintptr_t)last, 1, 17);
