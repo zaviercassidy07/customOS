@@ -151,24 +151,9 @@ reinitPaging:
     cmp rdi, (pt + 4096)
     jne .refillPT
 
-    mov rdi, pt1
-    mov rax, 0x200003
-
-.fillPT1:
-    mov [rdi], rax
-
-    add rdi, 8
-    add rax, 0x1000
-    cmp rdi, (pt1 + 4096)
-    jne .fillPT1
-
     mov rax, pt
     or rax, 0x3
     mov [pd], rax
-
-    mov rax, pt1
-    or rax, 0x3
-    mov [pd + 8], rax
 
     mov rax, pd
     or rax, 0x3
@@ -355,10 +340,6 @@ pd:
 
 align 4096
 pt:
-    resb 4096
-
-align 4096
-pt1:
     resb 4096
 
 align 16
