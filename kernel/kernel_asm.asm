@@ -1,130 +1,11 @@
 section .text
-[bits 16]
-global start ; export function to linker
-start:
-    cli ; clear interupts, it pauses the bios int codes as they're now unstable
-
-    lgdt [gdtr] ; load gdt
-
-    ; enable protected mode
-    mov eax, cr0 ; cr0 determines whether in protected mode or not, change to 1
-    or eax, 1
-    mov cr0, eax
-
-    jmp 0x08:protected_mode_entry ; 0x08 is now segment where code is stored
-
-[bits 32]
-protected_mode_entry:
-    ; reload data segments
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    mov esp, 0x90000   ; initialize stack
-
-    call initPaging
-
-    jmp prepLong
-
-; NOTE: This sets up access to 1MB of RAM
-initPaging:
-    mov edi, pt
-    mov eax, 0x3
-
-.fillPT:
-    mov [edi], eax ; fill top half with data
-    mov dword [edi + 4], 0 ; fill higher half with 0s
-
-    add edi, 8
-    add eax, 0x1000
-    cmp edi, (pt + 4096) ; 4096 for 2MB access, change for less
-    jne .fillPT
-
-    ;Zero all entries of tables, then we add in what we use
-    mov edi, pd
-    xor eax, eax
-    mov ecx, 512
-.zeroPD:
-    mov [edi], eax
-    mov [edi + 4], eax
-    add edi, 8
-    dec ecx
-    jnz .zeroPD
-
-    mov edi, pdpt
-    mov ecx, 512
-.zeroPDPT:
-    mov [edi], eax
-    mov [edi + 4], eax
-    add edi, 8
-    dec ecx
-    jnz .zeroPDPT
-
-    mov edi, pml4Phys
-    mov ecx, 512
-.zeroPML4:
-    mov [edi], eax
-    mov [edi + 4], eax
-    add edi, 8
-    dec ecx
-    jnz .zeroPML4
-
-    mov eax, pt
-    or eax, 0x03
-    mov [pd], eax
-    mov dword [pd + 4], 0
-
-    mov eax, pd
-    or eax, 0x03
-    mov [pdpt], eax
-    mov dword [pdpt + 4], 0 ; again, populating table, fill half with 0s
-
-    mov eax, pdpt
-    or eax, 0x03
-    mov [pml4Phys], eax
-    mov dword [pml4Phys + 4], 0
-
-    ret
-
-    
-prepLong:
-    mov ebx, cr0
-    and ebx, ~(1 << 31) ; make sure paging bit is disabled (~ is not). must be disabled before we do this
-    mov cr0, ebx
-
-    mov edx, cr4
-    or edx, (1 << 5) ; enable PAE bit
-    mov cr4, edx
-
-    mov ecx, 0xC0000080
-    rdmsr ; read 64 bit register in ecx, split into edx:eax
-    or eax, (1 << 8) ; turn on long mode bit
-    wrmsr ; write into 64 bit register
-
-    mov eax, pml4Phys
-    mov cr3, eax ; store address of pml4
-
-    mov ebx, cr0
-    or ebx, (1 << 31); enable paging again
-    mov cr0, ebx
-
-    jmp 0x18:long_mode_entry
-
 [bits 64]
-long_mode_entry:
-    mov ax, 0x20
-    mov ds, ax
-    mov es, ax
-    mov ss, ax
-    mov fs, ax
-    mov gs, ax ; reinit registers
 
+global start
+start:
     mov rsp, stack_top
     and rsp, -16
 
-    call reinitPaging
     call initPIC
     call initIDT
 
@@ -138,39 +19,6 @@ long_mode_entry:
     call main
 
     jmp $
-
-reinitPaging:
-    mov rdi, pt
-    mov rax, 0x3
-
-.refillPT:
-    mov [rdi], rax
-
-    add rdi, 8
-    add rax, 0x1000
-    cmp rdi, (pt + 4096)
-    jne .refillPT
-
-    mov rax, pt
-    or rax, 0x3
-    mov [pd], rax
-
-    mov rax, pd
-    or rax, 0x3
-    mov [pdpt], rax
-
-    mov rax, pdpt
-    or rax, 0x3
-    mov [pml4Phys], rax
-
-    mov rax, pml4Phys
-    or rax, 0x3
-    mov [pml4Phys + 4080], rax
-
-    mov rax, pml4Phys
-    mov cr3, rax
-
-    ret
 
 initPIC:
     mov al, 0x11 ; init begin command
@@ -302,19 +150,6 @@ keyboardHandler_asm:
     pop rax
     iretq
 
-gdt_start:
-    ; bytes are 2 char, bytes in order are base-high, flags and limit-high, access perms, base mid, base mid, base low, limit mid, limit low
-    dq 0x0000000000000000 ; null
-    dq 0x00CF9A000000FFFF ; code 32bit (base=0, 4 GB)
-    dq 0x00CF92000000FFFF ; data 32bit (base=0, 4 GB)
-    dq 0x00A09A0000000000 ; code 64bit
-    dq 0x00A0920000000000 ; data 64bit
-gdt_end:
-
-gdtr:
-    dw gdt_end - gdt_start - 1 ; length of gdt - 1
-    dq gdt_start ; start address
-
 align 16
 idt_start:
     times 512 dq 0 ; 256 64 bit entries
@@ -325,22 +160,6 @@ idtr: ; same as gdtr
     dq idt_start
 
 section .bss
-global pml4Phys ; expose these addresses to C for later modification
-align 4096 ; moves address forward until divisible by 4096, these tables need to be on even address
-pml4Phys: ; contains pointer to tables
-    resb 4096
-
-align 4096
-pdpt:
-    resb 4096
-
-align 4096
-pd:
-    resb 4096
-
-align 4096
-pt:
-    resb 4096
 
 align 16
 stack_bottom:

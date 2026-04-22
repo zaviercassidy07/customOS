@@ -13,8 +13,6 @@ size_t heapSize;
 blockHeader_t* heapHead;
 blockHeader_t* heapTail;
 
-extern pml4_t pml4Phys[512];
-
 void initPMM()
 {
     uintptr_t kernelStart = (uintptr_t)&_kernel_start; //use & as we need address of this symbol
@@ -110,11 +108,6 @@ void pmmFreePage(void* addr)
     BIT_CLEAR(pmmBitmap, page);
     usedPages--;
     return;
-}
-
-void reloadCr3()
-{
-    __asm__ volatile ("mov %0, %%cr3" : : "r"(pml4Phys) : "memory");
 }
 
 //invlpg is "invalidate page", clears cache about that page

@@ -40,8 +40,8 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel.elf
 	objcopy -O binary $< $@
 
 $(OUT)/os.img: $(BUILD)/stage1.bin $(BUILD)/stage2.bin $(BUILD)/kernel.bin
-	dd if=/dev/zero of=$@ bs=512 count=2880
+	dd if=/dev/zero of=$@ bs=512 count=131072 # 64mb total
 	dd if=$(BUILD)/stage1.bin of=$@ count=1 conv=notrunc
-	dd if=$(BUILD)/stage2.bin of=$@ count=4 seek=1 conv=notrunc
-	dd if=$(BUILD)/kernel.bin of=$@ seek=5 conv=notrunc 
+	dd if=$(BUILD)/stage2.bin of=$@ count=40 seek=1 conv=notrunc
+	dd if=$(BUILD)/kernel.bin of=$@ seek=41 conv=notrunc 
 

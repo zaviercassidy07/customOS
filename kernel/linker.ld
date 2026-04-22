@@ -2,7 +2,7 @@ ENTRY(start)
 
 SECTIONS
 {
-    . = 0x9000;
+    . = 0x10000;
 
     _kernel_start = .;
 
