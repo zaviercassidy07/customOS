@@ -1,5 +1,20 @@
 #include "memUtils.h"
 
+extern char _kernel_start;
+extern char _kernel_end;
+
+uint8_t pmmBitmap[262144];
+size_t totalPages = 262144; //1GB of pages (I think)
+size_t usedPages = 0;
+uint64_t nextFree = 0;
+
+uintptr_t heapStart;
+size_t heapSize;
+blockHeader_t* heapHead;
+blockHeader_t* heapTail;
+
+extern pml4_t pml4Phys[512];
+
 void initPMM()
 {
     uintptr_t kernelStart = (uintptr_t)&_kernel_start; //use & as we need address of this symbol
@@ -258,7 +273,7 @@ void* malloc(size_t size)
             {
                 blockHeader_t* newBlock = (blockHeader_t*)((uintptr_t)cur + sizeof(blockHeader_t) + size);
                 newBlock->free = 1;
-                
+
                 newBlock->next = cur->next;
                 cur->next = newBlock;
 

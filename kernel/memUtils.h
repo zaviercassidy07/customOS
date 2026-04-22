@@ -1,7 +1,9 @@
 #ifndef MEM_UTILS_H
 #define MEM_UTILS_H
 
-#define NULL ((void*)0)
+#include "types.h"
+
+#include "printUtils.h"
 
 //we'll use 4kb pages for this
 #define PAGE_SIZE 4096 
@@ -19,12 +21,6 @@
 #define RECUR 0xFFFFFF0000000000ULL
 #define RECUR_INDEX 510ULL
 
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
-typedef unsigned long long size_t;
-typedef unsigned long long uintptr_t;
-
 typedef uint64_t pml4_t;
 typedef uint64_t pdpt_t;
 typedef uint64_t pd_t;
@@ -36,23 +32,6 @@ typedef struct blockHeader_t
     int free;
     struct blockHeader_t* next;
 } blockHeader_t;
-
-extern pml4_t pml4Phys[512];
-
-extern char _kernel_start;
-extern char _kernel_end;
-
-extern void printHex(uintptr_t str, int pfx);
-
-uint8_t pmmBitmap[262144];
-size_t totalPages = 262144; //1GB of pages (I think)
-size_t usedPages = 0;
-uint64_t nextFree = 0;
-
-uintptr_t heapStart;
-size_t heapSize;
-blockHeader_t* heapHead;
-blockHeader_t* heapTail;
 
 void initPMM();
 void initHeap();
@@ -74,6 +53,4 @@ void mergeBlocks();
 
 void dumpPmmBitmap(int start, int end);
 
-extern void print(char* string);
-extern void printLineHex(uintptr_t str, int pfx, uint8_t line);
 #endif

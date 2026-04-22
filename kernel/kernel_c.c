@@ -1,11 +1,9 @@
 typedef unsigned long long uintptr_t;
 
-extern void print(char* string);
+#include "printUtils.h"
+#include "memUtils.h"
 
-extern void processBuffer();
-
-extern void initPMM();
-extern void initHeap();
+#include "keyboardHandler.h"
 
 int commandReady = 0;
 
