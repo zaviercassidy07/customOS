@@ -30,19 +30,23 @@ void initPMM()
 void initHeap()
 {
     heapStart = 0x400000; //Heap can be right at bottom with virtual high kernel
-    if(heapStart < ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF) //if its in the kernel
+    if(heapStart < ((uintptr_t)&_kernel_end + 0x1000) & ~(PAGE_SIZE - 1)) //if its in the kernel
     {
-        heapStart = ((uintptr_t)&_kernel_end + 0x1000) & ~0xFFF; //putit 4KB above kernel and align it
+        heapStart = ((uintptr_t)&_kernel_end + 0x1000) & ~(PAGE_SIZE - 1); //putit 4KB above kernel and align it
     }
-    heapPtr = heapStart;
-    heapEnd = heapStart;
+    
 
     vMap(heapStart, (uintptr_t)pmmAlloc());
 
-    heapEnd += PAGE_SIZE;
+    heapSize = PAGE_SIZE;
 
-    heapHead = NULL;
-    heapTail = NULL;
+    blockHeader_t* block = (blockHeader_t*)heapStart;
+    block->size = 0; //placeholder as heapTail never gets size checked
+    block->free = 1;
+    block->next = NULL;
+
+    heapHead = block;
+    heapTail = block;
 
     return;
 }
@@ -59,7 +63,7 @@ void* pmmAlloc()
             return (void*)(i * PAGE_SIZE);
         }
     }
-    for(size_t i = 0; i < totalPages; i++)
+    for(size_t i = 0; i < nextFree; i++)
     {
         if(!BIT_TEST(pmmBitmap, i))
         {
@@ -106,8 +110,8 @@ void invlpg(uintptr_t addr)
 
 void vMap(uintptr_t virt, uintptr_t phys)
 {
-    uintptr_t allignedPhys = phys & ~0xFFF;
-    uintptr_t allignedVirt = virt & ~0xFFF;
+    uintptr_t allignedPhys = phys & ~(PAGE_SIZE - 1);
+    uintptr_t allignedVirt = virt & ~(PAGE_SIZE - 1);
 
     // first 36 bits show address, 9 for each PML4, PDPT, PD and PT, but we have no PT so those bits are offset too
     uint64_t pml4Index = (virt >> 39) & 0x1FF; //0x1FF is only first 9 bits
@@ -124,7 +128,6 @@ void vMap(uintptr_t virt, uintptr_t phys)
             print("\nError: PMM ALLOC FAILED\n");
         }
         pml4[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
-        reloadCr3();
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
         for(int i = 0; i < 512; i++)
@@ -142,7 +145,6 @@ void vMap(uintptr_t virt, uintptr_t phys)
             print("\nError: PMM ALLOC FAILED\n");
         }
         pdpt[pdptIndex] = (uintptr_t)newPd | PAGE_PRESENT | PAGE_WRITABLE;
-        reloadCr3();
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
         for(int i = 0; i < 512; i++)
@@ -161,7 +163,6 @@ void vMap(uintptr_t virt, uintptr_t phys)
             print("\nError: PMM ALLOC FAILED\n");
         }
         pd[pdIndex] = (uintptr_t)newPt | PAGE_PRESENT | PAGE_WRITABLE;
-        reloadCr3();
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12 );
         for(int i = 0; i < 512; i++)
@@ -172,7 +173,6 @@ void vMap(uintptr_t virt, uintptr_t phys)
     }
 
     pt_t* pt = (pt_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12);
-
     pt[ptIndex] = allignedPhys | PAGE_PRESENT | PAGE_WRITABLE;
 
     invlpg(allignedVirt);
@@ -194,7 +194,7 @@ void vUMap(uintptr_t virt)
 
     pt[ptIndex] = 0;
 
-    uintptr_t allignedVirt = virt & ~0xFFF;
+    uintptr_t allignedVirt = virt & ~(PAGE_SIZE - 1);
     invlpg(allignedVirt);
 
     return;
@@ -240,85 +240,78 @@ void* malloc(size_t size)
 
     size = (size + 7) & ~7; //align to 8 bytes
 
-    blockHeader_t* cur = heapHead; //create pointer to start of chain
+    blockHeader_t* cur = heapHead;
+    blockHeader_t* block = NULL;
 
-    //check if any existing blocks are suitable
-    while (cur) // while its not null
+    //find the block that our data will be assigned to
+    while(cur)
     {
-        if(cur->free == 1 && cur->size >= size) //if its free and bit enough
+        if(cur == heapTail)
         {
-            if(cur->size >= 32 + size) //if at least 8 bits after header, create new header so memory is usable
+            block = cur;
+            break;
+        }
+        if(cur->free == 1 && cur->size >= size)
+        {
+            //split logic
+            if(cur->size >= size + sizeof(blockHeader_t) + 8)
             {
-                blockHeader_t* split = (blockHeader_t*)((uintptr_t)cur + sizeof(blockHeader_t) + size);
-                split->free = 1;
-                split->size = cur->size - sizeof(blockHeader_t) - size;
+                blockHeader_t* newBlock = (blockHeader_t*)((uintptr_t)cur + sizeof(blockHeader_t) + size);
+                newBlock->free = 1;
                 
-                split->next = cur->next;
-                cur->next = split;
-                
-                if(heapTail == cur)
-                {
-                    heapTail = split;
-                }
+                newBlock->next = cur->next;
+                cur->next = newBlock;
 
+                newBlock->size = cur->size - size - sizeof(blockHeader_t);
                 cur->size = size;
             }
-            cur->free = 0; //now its not free
 
-            return (void*)(cur + 1); //return this one
+
+            block = cur;
+            break;
         }
-        cur = cur->next; //if its not free or big enough, move to next in chain
+        cur = cur->next;
     }
 
-    //if not, we need to make a new one
     size_t totalSize = sizeof(blockHeader_t) + size;
-
-    uintptr_t blockStartPage = heapPtr & ~0xFFFULL;
-    uintptr_t blockEndAddr   = heapPtr + totalSize - 1;
-    uintptr_t blockLastPage  = blockEndAddr & ~0xFFFULL;
-
-    //Make sure page with header is mapped
-    for(uintptr_t page = blockStartPage; page <= blockLastPage; page += PAGE_SIZE)
+    if(block == heapTail)
     {
-        if(isMapped(page) == 0) //no idea why but these pages here seems to always dodge being allocated
+        totalSize += sizeof(blockHeader_t); //if we're creating a new block on end of chain
+    }
+    uintptr_t blockEnd = (uintptr_t)block + totalSize;
+    while(blockEnd >= heapStart + heapSize)
+    {
+        uintptr_t phys = (uintptr_t)pmmAlloc();
+        if(!phys)
         {
-            void* phys = pmmAlloc();
-            if(!phys)
-            {
-                print("\nPMM ALLOC FAILED\n");
-                return NULL;
-            }
-            vMap(page, (uintptr_t)phys);
-
-            if(page + PAGE_SIZE > heapEnd)
-            {
-                heapEnd = page + PAGE_SIZE;
-            }
+            print("\nPMM ALLOC FAIL\n");
+            return NULL;
         }
+        vMap(heapStart + heapSize, phys);
+        heapSize += PAGE_SIZE;
     }
 
-    //if no existing block is good, make new one at heapPtr
-    blockHeader_t* block = (blockHeader_t*)heapPtr; 
-    block->size = size;
     block->free = 0;
-    block->next = NULL;
 
-    if(!heapHead) //if there is no beginning of chain, this is now beginning of chain
+    if(block == heapTail)
     {
-        heapHead = block;
-        heapTail = block;
+        if((uintptr_t)heapTail & ~0xFFF == 0x4FF000ULL)
+        {
+            print("About to page fault");
+        }
+        blockHeader_t* newBlock = (blockHeader_t*)((uintptr_t)block + sizeof(blockHeader_t) + size);
+		
+        newBlock->free = 1;
+        newBlock->size = 0; //zero is used as placeholder, size is never checked for heapTail anyway
+        newBlock->next = NULL;
+
+        block->next = newBlock;
+        block->size = size;
+
+        heapTail = newBlock;
     }
-    else
-    {
-        heapTail->next = block; //if chain does exist, add this to end
-        heapTail = block;
-    }
 
-    heapPtr += totalSize; //move heapPtr
-
-    void* addr = (void*)(block + 1); //return the address just past the header
-
-    return addr;
+    return(void*)(block + 1);
 }
 
 void free(uintptr_t addr)
@@ -331,33 +324,26 @@ void free(uintptr_t addr)
 void mergeBlocks()
 {
     blockHeader_t* cur = heapHead;
-    blockHeader_t* oldCur = heapHead;
 
     if(heapHead == heapTail)
     {
         return;
     }
 
-    cur = cur->next;
-
-    while(cur)
+    while(cur && cur->next)
     {
-        if(cur->free == 1 && oldCur->free == 1)
+        if(cur->free == 1 && cur->next->free == 1)
         {
-            oldCur->size = oldCur->size + cur->size + sizeof(blockHeader_t);
-            oldCur->next = cur->next;
+            cur->size += sizeof(blockHeader_t) + cur->next->size;
+            cur->next = cur->next->next;
 
-            if(heapTail == cur)
+            if(cur->next == heapTail)
             {
-                heapTail = oldCur;
-                return;
+                heapTail = cur;
             }
-
-            cur = cur->next;
         }
         else
         {
-            oldCur = cur;
             cur = cur->next;
         }
     }

@@ -37,7 +37,7 @@ typedef struct blockHeader_t
     struct blockHeader_t* next;
 } blockHeader_t;
 
-extern pml4_t pml4Phys[1024];
+extern pml4_t pml4Phys[512];
 
 extern char _kernel_start;
 extern char _kernel_end;
@@ -50,8 +50,7 @@ size_t usedPages = 0;
 uint64_t nextFree = 0;
 
 uintptr_t heapStart;
-uintptr_t heapEnd;
-uintptr_t heapPtr;
+size_t heapSize;
 blockHeader_t* heapHead;
 blockHeader_t* heapTail;
 

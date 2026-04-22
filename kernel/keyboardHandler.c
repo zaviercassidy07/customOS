@@ -84,43 +84,57 @@ void processBuffer()
         clearScreen();
         print("HEAP TEST START\n\n");
 
-        /*uintptr_t* m1 = (uintptr_t*)malloc(4096);
-        print("Data start: "); printHex((uintptr_t)m1, 1); print("\n\n");
-        uintptr_t* m2 = (uintptr_t*)malloc(4096);
-        print("Data start: "); printHex((uintptr_t)m2, 1); print("\n\n");
-        uintptr_t* m3 = (uintptr_t*)malloc(4096);
-        print("Data start: "); printHex((uintptr_t)m3, 1); print("\n\n");*/
+		#define N 64
+		uintptr_t* ptrs[N];
+		size_t sizes[N];
 
-        uint64_t allocated = 0;
-        uintptr_t* last = (uintptr_t*)0;
+		// Allocate variable sizes
+		for(int i = 0; i < N; i++)
+		{
+			sizes[i] = 128 + (i * 32);
+			ptrs[i] = (uintptr_t*)malloc(sizes[i]);
 
-        for(int i = 0; i < 261887; i++) //just under 1GB total
-        {
-            last = (uintptr_t*)malloc(4096);
+			if(!ptrs[i])
+			{
+				print("ALLOC FAIL\n");
+				return;
+			}
+		}
 
-            if(!last)
-            {
-                print("ALLOC FAIL\n");
-                break;
-            }
+		print("ALLOC OK\n");
 
-            if(i % 64 == 0)
-            {
-                printLineHex((uintptr_t)last, 1, 15);
-            }
-            if(i % 256 == 0)
-            {
-                printLineHex((uintptr_t)last, 1, 16);
-            }
-            if(i % 512 == 0)
-            {
-                printLineHex((uintptr_t)last, 1, 17);
-            }
+		// Free middle region
+		for(int i = 16; i < 48; i++)
+		{
+			free((uintptr_t)ptrs[i]);
+		}
 
-            allocated += 4096;
-        }
-        print("Total allocated: ");
-        printHex(allocated, 1);
+		print("FREED MID\n");
+
+		// Track freed region range
+		uintptr_t freeStart = (uintptr_t)ptrs[16];
+		uintptr_t freeEnd   = (uintptr_t)ptrs[47];
+
+		// Allocate larger blocks
+		int reused = 0;
+		for(int i = 0; i < 16; i++)
+		{
+			uintptr_t* p = (uintptr_t*)malloc(2048);
+
+			if(!p)
+				break;
+
+			// Check if allocation landed inside freed region
+			if((uintptr_t)p >= freeStart && (uintptr_t)p <= freeEnd)
+			{
+				reused++;
+			}
+		}
+
+		// Output
+		print("REUSE: ");
+		printHex(reused, 1);
+
         print("\n\nHEAP TEST END\n");
     }
     else
