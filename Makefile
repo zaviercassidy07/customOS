@@ -5,7 +5,8 @@ LD=ld
 BUILD=build
 OUT=out
 
-CFLAGS=-m64 -O0 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -mno-red-zone
+CFLAGS=-m64 -O0 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -mno-red-zone -g #g is debug
+ASMFLAGS=-g
 
 C_SOURCES=$(wildcard kernel/*.c)
 ASM_SOURCES=$(wildcard kernel/*.asm)
@@ -22,14 +23,14 @@ clean:
 	rm -v out/*
 
 $(BUILD)/stage1.bin: bootloader/stage1.asm 
-	$(ASM) -f bin $< -o $@
+	$(ASM) $(ASMFLAGS) -f bin $< -o $@
 $(BUILD)/stage2.bin: bootloader/stage2.asm 
-	$(ASM) -f bin $< -o $@
+	$(ASM) $(ASMFLAGS) -f bin $< -o $@
 
 $(BUILD)/%.o: kernel/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 $(BUILD)/%.o: kernel/%.asm
-	$(ASM) -f elf64 $< -o $@
+	$(ASM) $(ASMFLAGS) -f elf64 $< -o $@
 
 # Seperate ELF allows more debug as I can see the ELF file before converting to binary
 $(BUILD)/kernel.elf: $(OBJECTS) 
