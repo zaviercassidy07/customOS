@@ -1,6 +1,7 @@
 [org 0x8000]
 [bits 16]
 
+; load rest of kernel now as its easier with interupts
 xor bx, bx
 mov ah, 0x42
 mov dl, [0x7D00]
@@ -50,34 +51,7 @@ initPaging:
     cmp edi, (pt + 4096) ; 4096 for 2MB access, change for less
     jne .fillPT
 
-    ;Zero all entries of tables, then we add in what we use
-    mov edi, pd
-    xor eax, eax
-    mov ecx, 512
-.zeroPD:
-    mov [edi], eax
-    mov [edi + 4], eax
-    add edi, 8
-    dec ecx
-    jnz .zeroPD
-
-    mov edi, pdpt
-    mov ecx, 512
-.zeroPDPT:
-    mov [edi], eax
-    mov [edi + 4], eax
-    add edi, 8
-    dec ecx
-    jnz .zeroPDPT
-
-    mov edi, pml4
-    mov ecx, 512
-.zeroPML4:
-    mov [edi], eax
-    mov [edi + 4], eax
-    add edi, 8
-    dec ecx
-    jnz .zeroPML4
+    ; Tables don't need to be zeroed as they are declared with db 0
 
     mov eax, pt
     or eax, 0x03
@@ -98,6 +72,11 @@ initPaging:
     or eax, 0x03
     mov [pml4 + 4080], eax
     mov dword [pml4 + 4084], 0
+
+    mov eax, pdpt
+    or eax, 0x03
+    mov [pml4 + 4088], eax
+    mov dword [pml4 + 4092], 0
 
     ret
     
@@ -133,7 +112,7 @@ long_entry:
     mov fs, ax
     mov gs, ax ; reinit registers
 
-    mov rax, 0x10000
+    mov rax, 0xFFFFFF8000010000 ; kernel has to be at this address
     jmp rax
 
 [bits 16]

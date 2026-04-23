@@ -1,9 +1,10 @@
-section .text
 [bits 64]
+section .text
 
 global start
 start:
-    mov rsp, stack_top
+    mov rax, stack_top
+    mov rsp, rax
     and rsp, -16
 
     call initPIC
@@ -47,6 +48,11 @@ initPIC:
     ret
 
 initIDT:
+    ; double fault, exception 8
+    mov rax, double_fault
+    mov rdi, 0x08
+    call addIDTEntry
+
     ; init gp fault, exception 13 (0x0D)
     mov rax, gp_fault
     mov rdi, 0x0D
@@ -62,58 +68,71 @@ initIDT:
     mov rdi, 0x21
     call addIDTEntry
 
-    lidt [idtr]
+    mov rax, idtr
+    lidt [rax]
     sti
 
     ret
 
 addIDTEntry:
-    mov rbx, rdi
-    mov rdx, rax
+    ; rdi = idt index
+    ; rax = function addr
 
-    shl rbx, 4 ; multiply by 16 as each index is 16 bytes long (shl is shuffle left)
-    add rbx, idt_start ; get start address
+    shl rdi, 4 ; multiply by 16 as each index is 16 bytes long (shl is shuffle left)
+    mov rcx, idt_start
+    add rdi, rcx ; get start address
 
     ; offset low
-    mov ax, dx
-    mov word [rbx], ax ; store first 16 bits of address
+    mov word [rdi], ax ; store first 16 bits of address
 
     ; selector
-    mov word [rbx + 2], 0x18 ; where in the GDT table the handler function is
+    mov word [rdi + 2], 0x18 ; where in the GDT table the handler function is
 
-    ; IST (0) + reserved
-    mov byte [rbx + 4], 0 ; reserved byte for standards reasons
+    mov byte [rdi + 4], 0 ; reserved byte for standards reasons
 
     ; type = interrupt gate
-    mov byte [rbx + 5], 0x8E ; How the interupt is handled, different values can allow recursive interupts etc
+    mov byte [rdi + 5], 0x8E ; How the interupt is handled, different values can allow recursive interupts etc
 
     ; offset mid
-    mov rax, rdx
     shr rax, 16 ; shuffle right 16, ax now has next 16 bits along
-    mov word [rbx + 6], ax ; store another 16 bits
+    mov word [rdi + 6], ax ; store another 16 bits
 
     ; offset high
     shr rax, 16 ; shuffle another 16 bits, eax will have last 32 bits of handler address
-    mov dword [rbx + 8], eax
+    mov dword [rdi + 8], eax
 
-    ; zero
-    mov dword [rbx + 12], 0 ; terminating character
+    mov dword [rdi + 12], 0 ; terminating characters
 
     ret
 
+double_fault:
+    mov rax, 0xFFFFFF80000B8000
+    mov word [rax], 0x4F44 ; DF
+    add rax, 2
+    mov word [rax], 0x4F46
+
+    cli
+    hlt
+
 gp_fault:
-    mov word [0xB8000], 0x4F47 ; GP
-    mov word [0xB8002], 0x4F50
+    mov rax, 0xFFFFFF80000B8000
+    mov word [rax], 0x4F47 ; GP
+    add rax, 2
+    mov word [rax], 0x4F50
 
     cli
     hlt
 page_fault:
     ;call clearScreen
 
-    mov word [0xB8000], 0x4F50 ; PAGE
-    mov word [0xB8002], 0x4F41
-    mov word [0xB8004], 0x4F47
-    mov word [0xB8006], 0x4F45
+    mov rax, 0xFFFFFF80000B8000
+    mov word [rax], 0x4F50 ; PAGE
+    add rax, 2
+    mov word [rax], 0x4F41
+    add rax, 2
+    mov word [rax], 0x4F47
+    add rax, 2
+    mov word [rax], 0x4F45
 
     call newLine
     pop rdi
@@ -135,6 +154,11 @@ page_fault:
 
 keyboardHandler_asm:
     push rax
+    push rbx
+    push rcx
+    push rdx
+    push rdi
+
     in al, 0x60
     
     cmp al, 0x80 ; if greater than 0x80, probably key release so ignore. May have to change this later
@@ -147,19 +171,24 @@ keyboardHandler_asm:
     mov al, 0x20
     out 0x20, al
 
+    pop rdi
+    pop rdx
+    pop rcx
+    pop rbx
     pop rax
-    iretq
 
-align 16
-idt_start:
-    times 512 dq 0 ; 256 64 bit entries
-idt_end:
+    iretq
 
 idtr: ; same as gdtr
     dw idt_end - idt_start - 1
     dq idt_start
 
 section .bss
+
+align 16
+idt_start:
+    resb 4096 ; 512 64 bit entries
+idt_end:
 
 align 16
 stack_bottom:

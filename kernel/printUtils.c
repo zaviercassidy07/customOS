@@ -115,7 +115,7 @@ void printChar(char character)
         return;
     }
 
-    char* pos = (char*)(uint64_t)(0xB8000 + (cursorY*80 + cursorX)*2);
+    char* pos = (char*)(uint64_t)(0xB8000 + 0xFFFFFF8000000000 + (cursorY*80 + cursorX)*2);
     pos[0] = character;
     pos[1] = 0x0F;
 
@@ -140,7 +140,7 @@ void newLine()
 
 void clearScreen()
 {
-    uint16_t* pos = (uint16_t*)(0xB8000); //do this instead of char as it leaves the text colour byte normal
+    uint16_t* pos = (uint16_t*)(0xB8000 + 0xFFFFFF8000000000); //do this instead of char as it leaves the text colour byte normal
     for(int i = 0; i < 80*25; i++)
     {
         pos[i] = 0x0F20;

@@ -5,7 +5,7 @@ LD=ld
 BUILD=build
 OUT=out
 
-CFLAGS=-m64 -O0 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -mno-red-zone -g #g is debug
+CFLAGS=-m64 -O0 -mcmodel=large -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -mno-red-zone -g #g is debug
 ASMFLAGS=-g
 
 C_SOURCES=$(wildcard kernel/*.c)

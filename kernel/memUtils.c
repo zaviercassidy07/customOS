@@ -15,8 +15,8 @@ blockHeader_t* heapTail;
 
 void initPMM()
 {
-    uintptr_t kernelStart = (uintptr_t)&_kernel_start; //use & as we need address of this symbol
-    uintptr_t kernelEnd = (uintptr_t)&_kernel_end;
+    uintptr_t kernelStart = (uintptr_t)&_kernel_start - 0xFFFFFF8000000000; //use & as we need address of this symbol
+    uintptr_t kernelEnd = (uintptr_t)&_kernel_end - 0xFFFFFF8000000000;
 
     kernelStart &= ~(PAGE_SIZE - 1); //4096 = 0x1000, 4096 - 1 = 0x0FFF, & ~(0x0FFF) means offset bits are zeroed out, and we round down to 4096
     kernelEnd = (kernelEnd + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); //rounds up by pushing it into the next page then rounding down
@@ -43,11 +43,6 @@ void initPMM()
 void initHeap()
 {
     heapStart = 0x400000; //Heap can be right at bottom with virtual high kernel
-    if(heapStart < ((uintptr_t)&_kernel_end + 0x1000) & ~(PAGE_SIZE - 1)) //if its in the kernel
-    {
-        heapStart = ((uintptr_t)&_kernel_end + 0x1000) & ~(PAGE_SIZE - 1); //putit 4KB above kernel and align it
-    }
-    
 
     vMap(heapStart, (uintptr_t)pmmAlloc());
 
