@@ -42,7 +42,7 @@ void initPMM()
 
 void initHeap()
 {
-    heapStart = 0x400000; //Heap can be right at bottom with virtual high kernel
+    heapStart = 0x1000; //Heap can be right at bottom with virtual high kernel
 
     vMap(heapStart, (uintptr_t)pmmAlloc());
 

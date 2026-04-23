@@ -91,12 +91,11 @@ void processBuffer()
         clearScreen();
         print("HEAP TEST START\n\n");
 
-		#define N 64
-		uintptr_t* ptrs[N];
-		size_t sizes[N];
+		uintptr_t* ptrs[64];
+		size_t sizes[64];
 
 		// Allocate variable sizes
-		for(int i = 0; i < N; i++)
+		for(int i = 0; i < 64; i++)
 		{
 			sizes[i] = 128 + (i * 32);
 			ptrs[i] = (uintptr_t*)malloc(sizes[i]);
@@ -127,9 +126,12 @@ void processBuffer()
 		for(int i = 0; i < 16; i++)
 		{
 			uintptr_t* p = (uintptr_t*)malloc(2048);
+            printHex((uintptr_t)p, 1); print("\n");
 
 			if(!p)
+            {
 				break;
+            }
 
 			// Check if allocation landed inside freed region
 			if((uintptr_t)p >= freeStart && (uintptr_t)p <= freeEnd)

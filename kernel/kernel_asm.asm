@@ -7,8 +7,27 @@ start:
     mov rsp, rax
     and rsp, -16
 
+    mov rax, gdtr
+    lgdt [rax] ; we need to reload the gdt as it has to be in mapped memory, and jump to the new code segment
+    ; we'll also use this chance to get rid of the 32 bit entries in gdt
+    
+    push 0x08
+    mov rax, refreshGDT
+    push rax
+    retfq ; far return quad, gets address of stack which is why we push segment and function. Only way to do this in long mode so im told
+
+refreshGDT:
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov fs, ax
+    mov gs, ax ; reinit registers
+
     call initPIC
     call initIDT
+
+    call removeIdentityMap
 
     extern main
     extern keyboardHandler_c
@@ -20,6 +39,15 @@ start:
     call main
 
     jmp $
+
+removeIdentityMap:
+    mov rax, 0xFFFFFF7FBFDFE000 ; rdi has physical address for pml4, add virtual offset
+    mov qword [rax], 0
+
+    mov rax, cr3
+    mov cr3, rax ; reload cr3
+
+    ret
 
 initPIC:
     mov al, 0x11 ; init begin command
@@ -86,7 +114,7 @@ addIDTEntry:
     mov word [rdi], ax ; store first 16 bits of address
 
     ; selector
-    mov word [rdi + 2], 0x18 ; where in the GDT table the handler function is
+    mov word [rdi + 2], 0x08 ; where in the GDT table the handler function is
 
     mov byte [rdi + 4], 0 ; reserved byte for standards reasons
 
@@ -178,6 +206,19 @@ keyboardHandler_asm:
     pop rax
 
     iretq
+
+section .data
+
+gdt_start:
+    ; bytes are 2 char, bytes in order are base-high, flags and limit-high, access perms, base mid, base mid, base low, limit mid, limit low
+    dq 0x0000000000000000 ; null
+    dq 0x00A09A0000000000 ; code 64bit
+    dq 0x00A0920000000000 ; data 64bit
+gdt_end:
+
+gdtr:
+    dw gdt_end - gdt_start - 1 ; length of gdt - 1
+    dq gdt_start ; start address
 
 idtr: ; same as gdtr
     dw idt_end - idt_start - 1
