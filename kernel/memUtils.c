@@ -298,7 +298,7 @@ void* malloc(size_t size)
 
     if(block == heapTail)
     {
-        if((uintptr_t)heapTail & ~0xFFF == 0x4FF000ULL)
+        if(((uintptr_t)heapTail & ~0xFFF) == 0x4FF000ULL)
         {
             print("About to page fault");
         }

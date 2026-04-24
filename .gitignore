@@ -2,6 +2,5 @@ vm
 build
 out
 .*
-log
-vm.sh
-vmd.sh
+*log
+*.sh
