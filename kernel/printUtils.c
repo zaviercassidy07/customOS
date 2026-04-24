@@ -5,11 +5,6 @@ uint8_t cursorY = 0;
 
 const char hex[] = "0123456789ABCDEF";
 
-static inline void outb(uint16_t port, uint8_t value)
-{
-    __asm__ volatile ("outb %0, %1" : : "a"(value), "Nd"(port)); //different syntax because c asm is weird
-}
-
 void print(char* string)
 {
     while(string[0] != 0)

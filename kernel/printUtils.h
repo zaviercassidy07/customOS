@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#include "utils.h"
+
 void print(char* string);
 void printLine(char* string, uint8_t line);
 void printHex(uintptr_t str, int pfx);
