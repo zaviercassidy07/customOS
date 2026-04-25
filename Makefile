@@ -5,10 +5,10 @@ LD=ld
 BUILD=build
 OUT=out
 
-CFLAGS=-m64 -O0 -mcmodel=large -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -mno-red-zone -g #g is debug
+CFLAGS=-m64 -O0 -mcmodel=large -Ikernel -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -mno-red-zone -g #g is debug
 ASMFLAGS=-g
 
-C_SOURCES=$(wildcard kernel/*.c)
+C_SOURCES=$(wildcard kernel/*.c) $(wildcard kernel/drivers/*.c)
 ASM_SOURCES=$(wildcard kernel/*.asm)
 
 C_OBJECTS=$(patsubst kernel/%.c, $(BUILD)/%.o, $(C_SOURCES))
@@ -43,5 +43,6 @@ $(OUT)/os.img: $(BUILD)/stage1.bin $(BUILD)/stage2.bin $(BUILD)/kernel.bin
 	dd if=/dev/zero of=$@ bs=512 count=131072 # 64mb total
 	dd if=$(BUILD)/stage1.bin of=$@ count=1 conv=notrunc
 	dd if=$(BUILD)/stage2.bin of=$@ count=40 seek=1 conv=notrunc
-	dd if=$(BUILD)/kernel.bin of=$@ seek=41 conv=notrunc 
+	dd if=$(BUILD)/kernel.bin of=$@ count=64 seek=41 conv=notrunc
+	dd if=test/ataRead of=$@ seek=105 conv=notrunc
 

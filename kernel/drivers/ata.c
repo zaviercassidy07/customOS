@@ -1,0 +1,36 @@
+#include "ata.h"
+
+void readSectors(uintptr_t lba, size_t amount, uint16_t* location)
+{
+    if(checkBus() == 0)
+    {
+        return;
+    }
+    waitBSY();
+
+    outb(0x1F6, 0x40); //drive select port, gets 0x40 as placeholder since 48 bits contains drive
+
+    outb(0x1F2, (amount >> 8) & 0xFF);
+    outb(0x1F3, (lba >> 24) & 0xFF); // send upper 32 bits in ascending order
+    outb(0x1F4, (lba >> 32) & 0xFF);
+    outb(0x1F5, (lba >> 40) & 0xFF);
+
+    outb(0x1F2, amount & 0xFF);
+    outb(0x1F3, lba & 0xFF); // then send lower 32 bits
+    outb(0x1F4, (lba >> 8) & 0xFF);
+    outb(0x1F5, (lba >> 16) & 0xFF);
+
+    outb(0x1F7, 0x24); // EXTENDED READ command
+
+    for(int i = 0; i < amount; i++)
+    {
+        waitBSY();
+        waitDRQ();
+
+        for(int j = 0; j < 256; j++)
+        {
+            location[j] = inw(0x1F0); // data is streamed in on this port until completion
+        }
+        location += 256;
+    }
+}

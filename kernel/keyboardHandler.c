@@ -146,6 +146,12 @@ void processBuffer()
 
         print("\n\nHEAP TEST END\n");
     }
+    else if(compareArray(command, "read") == 1)
+    {
+        uint64_t* read = (uint64_t*)malloc(512);;
+        readSectors(105, 1, (uint16_t*)read);
+        print("Read test (expect 0x6969696969696969): "); printHex((uintptr_t)read[0], 1); print("\n");
+    }
     else
     {
         print("Not recognized\n");
