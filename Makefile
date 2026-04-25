@@ -19,8 +19,8 @@ OBJECTS=$(ASM_OBJECTS) $(C_OBJECTS)
 all: $(OUT)/os.img
 
 clean: 
-	rm -v build/*
-	rm -v out/*
+	rm -fv build/*.o build/*.bin build/*.elf build/drivers/*.o
+	rm -fv out/*
 
 $(BUILD)/stage1.bin: bootloader/stage1.asm 
 	$(ASM) $(ASMFLAGS) -f bin $< -o $@
@@ -44,5 +44,3 @@ $(OUT)/os.img: $(BUILD)/stage1.bin $(BUILD)/stage2.bin $(BUILD)/kernel.bin
 	dd if=$(BUILD)/stage1.bin of=$@ count=1 conv=notrunc
 	dd if=$(BUILD)/stage2.bin of=$@ count=40 seek=1 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ count=64 seek=41 conv=notrunc
-	dd if=test/ataRead of=$@ seek=105 conv=notrunc
-
