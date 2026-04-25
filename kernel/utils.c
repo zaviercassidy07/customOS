@@ -32,6 +32,17 @@ void strCopy(char* str, char* addr)
     return;
 }
 
+size_t strLen(char* str)
+{
+    size_t size = 0;
+
+    while(str[size] != 0)
+    {
+        size++;
+    }
+    return size + 1; // plus one accounts for null terminator
+}
+
 void split(char* in, char splitter, char* out1, char* out2)
 {
     int hasSplit = 0;
@@ -40,10 +51,7 @@ void split(char* in, char splitter, char* out1, char* out2)
         if(hasSplit == 1)
         {
             out2[0] = in[0];
-            if(out2[0] == 0)
-            {
-                break;
-            }
+
             out2++;
             in++;
             continue;
@@ -68,7 +76,7 @@ uint64_t convInt(char* input)
     uint64_t total = 0;
     uint64_t index = 0;
 
-    while(input[index] != '\0')
+    while(input[index] != 0)
     {
         total = (total * 10) + (input[index] - '0');
         index++;
