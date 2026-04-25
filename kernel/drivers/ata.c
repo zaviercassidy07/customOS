@@ -34,3 +34,20 @@ void readSectors(uintptr_t lba, size_t amount, uint16_t* location)
         location += 256;
     }
 }
+
+void readBytes(uint64_t byteOffset, size_t amount, uint8_t* location)
+{
+    uint64_t offset = byteOffset % 512;
+    uint64_t lba = byteOffset / 512;
+    size_t sectors = (offset + amount + 511) / 512;
+
+    uint8_t* tmp = (uint8_t*)malloc(sectors * 512);
+    readSectors(lba, sectors, (uint16_t*)tmp);
+
+    for(size_t i = 0; i < amount; i++)
+    {
+        location[i] = tmp[i];
+    }
+
+    free((uintptr_t)tmp);
+}

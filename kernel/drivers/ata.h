@@ -4,6 +4,7 @@
 #include "types.h"
 #include "utils.h"
 #include "printUtils.h"
+#include "memUtils.h"
 
 // 0x1F7 is status port
 static inline void waitBSY()
@@ -25,5 +26,6 @@ static inline int checkBus()
 }
 
 void readSectors(uintptr_t lba, size_t amount, uint16_t* location);
+void readBytes(uint64_t lba, size_t amount, uint8_t* location);
 
 #endif

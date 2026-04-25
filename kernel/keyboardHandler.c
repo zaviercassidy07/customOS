@@ -149,7 +149,7 @@ void processBuffer()
     else if(compareArray(command, "read") == 1)
     {
         uint64_t* read = (uint64_t*)malloc(512);;
-        readSectors(105, 1, (uint16_t*)read);
+        readBytes(53760, 8, (uint8_t*)read);
         print("Read test (expect 0x6969696969696969): "); printHex((uintptr_t)read[0], 1); print("\n");
     }
     else
