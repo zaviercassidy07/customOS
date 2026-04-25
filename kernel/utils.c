@@ -31,3 +31,17 @@ void strCopy(char* str, char* addr)
     addr[0] = 0;
     return;
 }
+
+uint64_t convInt(char* input)
+{
+    uint64_t total = 0;
+    uint64_t index = 0;
+
+    while(input[index] != '\0')
+    {
+        total = (total * 10) + (input[index] - '0');
+        index++;
+    }
+
+    return total;
+}

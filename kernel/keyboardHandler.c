@@ -152,6 +152,12 @@ void processBuffer()
         readBytes(53760, 8, (uint8_t*)read);
         print("Read test (expect 0x6969696969696969): "); printHex((uintptr_t)read[0], 1); print("\n");
     }
+    else if(compareArray(command, "conv") == 1)
+    {
+        uint64_t out = convInt(options);
+        printHex(out, 1);
+        print("\n");
+    }
     else
     {
         print("Not recognized\n");
