@@ -337,13 +337,16 @@ void mergeBlocks()
     {
         if(cur->free == 1 && cur->next->free == 1)
         {
-            cur->size += sizeof(blockHeader_t) + cur->next->size;
-            cur->next = cur->next->next;
-
             if(cur->next == heapTail)
             {
                 heapTail = cur;
+                cur->size = 0;
+                cur->next = NULL;
+                break;
             }
+
+            cur->size += sizeof(blockHeader_t) + cur->next->size;        
+            cur->next = cur->next->next;
         }
         else
         {
