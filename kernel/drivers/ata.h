@@ -28,4 +28,7 @@ static inline int checkBus()
 void readSectors(uintptr_t lba, size_t amount, uint16_t* location);
 void readBytes(uint64_t lba, size_t amount, uint8_t* location);
 
+void writeSectors(uint64_t lba, size_t amount, uint16_t* source);
+void writeBytes(uint64_t byteOffset, size_t amount, uint8_t* source);
+
 #endif

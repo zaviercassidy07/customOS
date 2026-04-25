@@ -8,7 +8,7 @@ static inline void outb(uint16_t port, uint8_t value)
 {
     __asm__ volatile ("outb %0, %1" : : "a"(value), "Nd"(port)); //different syntax because c asm is weird
 }
-static inline void outw(uint16_t port, uint8_t value)
+static inline void outw(uint16_t port, uint16_t value)
 {
     __asm__ volatile ("outw %w0, %1" : : "a"(value), "Nd"(port));
 }

@@ -122,9 +122,31 @@ void processBuffer()
     }
     else if(compareArray(command, "read") == 1)
     {
-        uint64_t* read = (uint64_t*)malloc(512);
-        readBytes(53760, 8, (uint8_t*)read);
-        print("Read test (expect 0x6969696969696969): "); printHex((uintptr_t)read[0], 1); print("\n");
+        char* read = (char*)malloc(512);
+        char addrStr[17];
+        char amountStr[17];
+        split(options, ' ', addrStr, amountStr);
+
+        uint64_t addr = convInt(addrStr);
+        uint64_t amount = convInt(amountStr);
+
+        readBytes(addr, amount, (uint8_t*)read);
+        print("Data: "); print(read); print("\n");
+        free((uintptr_t)read);
+    }
+    else if(compareArray(command, "write") == 1)
+    {
+        char* write = (char*)malloc(128);
+        char addrStr[17];
+        split(options, ' ', addrStr, write);
+
+        uint64_t addr = convInt(addrStr);
+
+        size_t bytes = strLen(write);
+
+        writeBytes(addr, bytes, (uint8_t*)write);
+        print("Stored: "); print(write); print("\n");
+        free((uintptr_t)write);
     }
     else if(compareArray(command, "conv") == 1)
     {
