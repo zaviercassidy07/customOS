@@ -49,33 +49,7 @@ void processBuffer()
     char command[16];
     char options[112];
 
-    for(int i = 0; i <  bufferIndex; i++)
-    {
-        if(buffer[i] == ' ')
-        {
-            commandIndex = i;
-            break;
-        }
-    }
-    if(commandIndex == 0)
-    {
-        commandIndex = bufferIndex;
-    }
-
-    for(int i = 0; i < commandIndex; i++)
-    {
-        command[i] = buffer[i];
-    }
-    command[commandIndex] = 0;
-
-    if(commandIndex != bufferIndex)
-    {
-        for(int i = commandIndex + 1; i < bufferIndex; i++)
-        {
-            options[i - (commandIndex + 1)] = buffer[i];
-        }
-        options[bufferIndex - (commandIndex + 1)] = 0;
-    }
+    split(buffer, ' ', command, options);
 
     if(compareArray(command, "echo") == 1)
     {
@@ -148,7 +122,7 @@ void processBuffer()
     }
     else if(compareArray(command, "read") == 1)
     {
-        uint64_t* read = (uint64_t*)malloc(512);;
+        uint64_t* read = (uint64_t*)malloc(512);
         readBytes(53760, 8, (uint8_t*)read);
         print("Read test (expect 0x6969696969696969): "); printHex((uintptr_t)read[0], 1); print("\n");
     }

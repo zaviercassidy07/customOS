@@ -32,6 +32,37 @@ void strCopy(char* str, char* addr)
     return;
 }
 
+void split(char* in, char splitter, char* out1, char* out2)
+{
+    int hasSplit = 0;
+    while(in[0] != 0)
+    {
+        if(hasSplit == 1)
+        {
+            out2[0] = in[0];
+            if(out2[0] == 0)
+            {
+                break;
+            }
+            out2++;
+            in++;
+            continue;
+        }
+        else if(in[0] == ' ')
+        {
+            hasSplit = 1;
+            in++;
+            continue;
+        }
+        out1[0] = in[0];
+        out1++;
+        in++;
+    }
+    out1[0] = 0;
+    out2[0] = 0;
+    return;
+}
+
 uint64_t convInt(char* input)
 {
     uint64_t total = 0;
