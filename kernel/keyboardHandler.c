@@ -1,11 +1,13 @@
 #include "keyboardHandler.h"
 
-extern int commandReady;
+char shellBuffer[128];
 
-char buffer[128];
+char* buffer = shellBuffer;
 uint8_t bufferIndex = 0;
 
 char keyMap[128] = {0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 8, 9, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 13, 0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 59,  39, '`', 0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, 0, 0, 32};
+
+extern statuses_t sysStatus;
 
 void keyboardHandler_c(uint8_t scancode)
 {
@@ -17,9 +19,13 @@ void keyboardHandler_c(uint8_t scancode)
     }
     if(character == 13) //enter
     {
-        print("\n");
-        commandReady = 1; //apparently interupts need to be small, moved rest of function into main
-        return;
+        if(sysStatus.shell == 1)
+        {
+            print("\n");
+            shell(buffer);
+            return;
+        }
+        character = '\n';
     }
     if(character == 8) //backspace
     {
@@ -50,4 +56,10 @@ void clearBuffer()
     }
     bufferIndex = 0;
     return;
+}
+
+void changeBuffer(char* newBuffer)
+{
+    buffer = newBuffer;
+    bufferIndex = 0;
 }

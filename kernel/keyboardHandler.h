@@ -5,7 +5,10 @@
 
 #include "printUtils.h"
 
+#include "shell.h"
+
 void keyboardHandler_c(uint8_t scancode);
 void clearBuffer();
+void changeBuffer(char* newBuffer);
 
 #endif

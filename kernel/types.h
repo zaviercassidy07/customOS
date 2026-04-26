@@ -10,4 +10,9 @@ typedef unsigned long long uint64_t;
 typedef unsigned long long size_t;
 typedef unsigned long long uintptr_t;
 
+typedef struct statuses_t
+{
+    int shell;
+} statuses_t;
+
 #endif

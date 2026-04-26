@@ -6,10 +6,11 @@
 #include "keyboardHandler.h"
 #include "shell.h"
 
-int commandReady = 0;
 extern char buffer[128];
 
 uint8_t* savedScreen;
+
+statuses_t sysStatus;
 
 void main()
 {
@@ -20,18 +21,9 @@ void main()
 
     print("Kernel Loaded\n");
 
-    while(1 == 1)
-    {
-        if(commandReady == 1)
-        {
-            shell(buffer);
-            commandReady = 0;
-        }
-        else
-        {
-            __asm__ volatile ("hlt");
-        }
-    }
+    sysStatus.shell = 1;
+
+    __asm__ volatile ("hlt");
 
     return;
 }
