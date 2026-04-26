@@ -133,10 +133,7 @@ void vMap(uintptr_t virt, uintptr_t phys)
         pml4[pml4Index] = (uintptr_t)newPdpt | PAGE_PRESENT | PAGE_WRITABLE;
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
-        for(int i = 0; i < 512; i++)
-        {
-            tmp[i] = 0;
-        }
+        memSet((uint8_t*)tmp, 0, 512);
     }
     pdpt_t* pdpt = (pdpt_t*)(RECUR | RECUR_INDEX << 30 | RECUR_INDEX << 21 | pml4Index << 12);
 
@@ -150,10 +147,7 @@ void vMap(uintptr_t virt, uintptr_t phys)
         pdpt[pdptIndex] = (uintptr_t)newPd | PAGE_PRESENT | PAGE_WRITABLE;
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
-        for(int i = 0; i < 512; i++)
-        {
-            tmp[i] = 0;
-        }
+        memSet((uint8_t*)tmp, 0, 512);
 
     }
     pd_t* pd = (pd_t*)(RECUR | RECUR_INDEX << 30 | pml4Index << 21 | pdptIndex << 12);
@@ -168,10 +162,7 @@ void vMap(uintptr_t virt, uintptr_t phys)
         pd[pdIndex] = (uintptr_t)newPt | PAGE_PRESENT | PAGE_WRITABLE;
 
         uintptr_t* tmp = (uintptr_t*)(RECUR | pml4Index << 30 | pdptIndex << 21 | pdIndex << 12 );
-        for(int i = 0; i < 512; i++)
-        {
-            tmp[i] = 0;
-        }
+        memSet((uint8_t*)tmp, 0, 512);
 
     }
 
