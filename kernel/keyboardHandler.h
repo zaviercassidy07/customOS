@@ -5,14 +5,7 @@
 
 #include "printUtils.h"
 
-#include "memUtils.h"
-
-#include "utils.h"
-
-#include "drivers/ata.h"
-
 void keyboardHandler_c(uint8_t scancode);
-void processBuffer();
 void clearBuffer();
 
 #endif

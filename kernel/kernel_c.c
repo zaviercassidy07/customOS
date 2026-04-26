@@ -4,8 +4,10 @@ typedef unsigned long long uintptr_t;
 #include "memUtils.h"
 
 #include "keyboardHandler.h"
+#include "shell.h"
 
 int commandReady = 0;
+extern char buffer[128];
 
 void main()
 {
@@ -18,7 +20,7 @@ void main()
     {
         if(commandReady == 1)
         {
-            processBuffer();
+            shell(buffer);
             commandReady = 0;
         }
         else
