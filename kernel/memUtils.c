@@ -314,6 +314,7 @@ void* malloc(size_t size)
         heapTail = newBlock;
     }
 
+    memSet((uint8_t*)(block + 1), 0, size);
     return(void*)(block + 1);
 }
 

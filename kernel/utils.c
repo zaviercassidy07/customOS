@@ -20,6 +20,14 @@ int compareArray(char* str1, char* str2)
     return 0;
 }
 
+void memSet(uint8_t* addr, char c, size_t amount)
+{
+    for(size_t i = 0; i < amount; i++)
+    {
+        addr[i] = c;
+    }
+}
+
 void strCopy(char* str, char* addr)
 {
     while(str[0] != 0)
