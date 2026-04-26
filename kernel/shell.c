@@ -1,5 +1,7 @@
 #include "shell.h"
 
+extern uint8_t* savedScreen;
+
 void shell(char* input)
 {
     char command[16];
@@ -15,6 +17,14 @@ void shell(char* input)
     else if(compareArray(command, "clear") == 1)
     {
         clearScreen();
+    }
+    else if(compareArray(command, "save") == 1)
+    {
+        saveScreen(savedScreen);
+    }
+    else if(compareArray(command, "restore") == 1)
+    {
+        restoreScreen(savedScreen);
     }
     else if(compareArray(command, "heap") == 1)
     {

@@ -5,6 +5,8 @@ uint8_t cursorY = 0;
 
 const char hex[] = "0123456789ABCDEF";
 
+char* screen = (char*)0xB8000 + 0xFFFFFF8000000000;
+
 void print(char* string)
 {
     while(string[0] != 0)
@@ -110,7 +112,7 @@ void printChar(char character)
         return;
     }
 
-    char* pos = (char*)(uint64_t)(0xB8000 + 0xFFFFFF8000000000 + (cursorY*80 + cursorX)*2);
+    char* pos = (char*)(uint64_t)(screen + (cursorY*80 + cursorX)*2);
     pos[0] = character;
     pos[1] = 0x0F;
 
@@ -133,9 +135,32 @@ void newLine()
     return;
 }
 
+void saveScreen(uint8_t* addr) // addr needs to have space for 4002
+{
+    addr[0] = cursorX;
+    addr[1] = cursorY;
+
+    for(int i = 2; i < 4002; i++)
+    {
+        addr[i] = screen[i - 2];
+    }
+}
+
+void restoreScreen(uint8_t* addr) // again, needs to be 4002 sized array
+{
+    cursorX = addr[0];
+    cursorY = addr[1];
+
+    for(int i = 0; i < 4002; i++)
+    {
+        screen[i] = addr[i + 2];
+    }
+    moveCursor();
+}
+
 void clearScreen()
 {
-    uint16_t* pos = (uint16_t*)(0xB8000 + 0xFFFFFF8000000000); //do this instead of char as it leaves the text colour byte normal
+    uint16_t* pos = (uint16_t*)screen; //do this instead of char as it leaves the text colour byte normal
     for(int i = 0; i < 80*25; i++)
     {
         pos[i] = 0x0F20;
