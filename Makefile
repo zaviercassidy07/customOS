@@ -23,7 +23,7 @@ all: $(OUT)/os.img
 
 clean: 
 	rm -fv build/*.o build/*.bin build/*.elf build/drivers/*.o
-	rm -fv out/os.img
+	rm -fv out/*
 
 tools: $(TOOLS_O)
 
