@@ -233,5 +233,5 @@ idt_end:
 
 align 16
 stack_bottom:
-    resb 8192
+    resb 32768
 stack_top:
