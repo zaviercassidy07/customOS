@@ -1,6 +1,7 @@
-vm
-build
-out
-.*
-*log
-*.sh
+*
+!*/
+!*.c
+!*.h
+!*.asm
+!MakeFile
+!notes

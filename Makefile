@@ -16,11 +16,19 @@ ASM_OBJECTS=$(patsubst kernel/%.asm, $(BUILD)/%.o, $(ASM_SOURCES))
 
 OBJECTS=$(ASM_OBJECTS) $(C_OBJECTS)
 
+TOOLS_C=$(wildcard tools/*.c)
+TOOLS_O=$(patsubst tools/%.c, out/%, $(TOOLS_C))
+
 all: $(OUT)/os.img
 
 clean: 
 	rm -fv build/*.o build/*.bin build/*.elf build/drivers/*.o
-	rm -fv out/*
+	rm -fv out/os.img
+
+tools: $(TOOLS_O)
+
+$(TOOLS_O): $(TOOLS_C)
+	$(CC) $< -o $@
 
 $(BUILD)/stage1.bin: bootloader/stage1.asm 
 	$(ASM) $(ASMFLAGS) -f bin $< -o $@
@@ -39,8 +47,11 @@ $(BUILD)/kernel.elf: $(OBJECTS)
 $(BUILD)/kernel.bin: $(BUILD)/kernel.elf
 	objcopy -O binary $< $@
 
-$(OUT)/os.img: $(BUILD)/stage1.bin $(BUILD)/stage2.bin $(BUILD)/kernel.bin
+$(OUT)/os.img: $(BUILD)/stage1.bin $(BUILD)/stage2.bin $(BUILD)/kernel.bin tools
 	dd if=/dev/zero of=$@ bs=512 count=131072 # 64mb total
 	dd if=$(BUILD)/stage1.bin of=$@ count=1 conv=notrunc
 	dd if=$(BUILD)/stage2.bin of=$@ count=40 seek=1 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ count=64 seek=41 conv=notrunc
+	$(OUT)/makeFat
+	mv fat.img $(OUT)/fat.img
+	dd if=$(OUT)/fat.img of=$@ seek=105 conv=notrunc
