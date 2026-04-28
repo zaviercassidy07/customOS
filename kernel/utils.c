@@ -64,7 +64,7 @@ void split(char* in, char splitter, char* out1, char* out2)
             in++;
             continue;
         }
-        else if(in[0] == ' ')
+        else if(in[0] == splitter)
         {
             hasSplit = 1;
             in++;
