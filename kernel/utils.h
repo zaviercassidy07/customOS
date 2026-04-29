@@ -35,6 +35,8 @@ size_t strLen(char* str);
 void split(char* in, char splitter, char* out1, char* out2);
 void splitN(char* in, char splitter, char* out1, char* out2);
 
+int count(char* str, char c);
+
 uint64_t convInt(char* input);
 
 #endif

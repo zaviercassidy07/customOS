@@ -129,6 +129,20 @@ void splitN(char* in, char splitter, char* out1, char* out2)
     return;
 }
 
+int count(char* str, char c)
+{
+    int num = 0;
+    while(str[0] != 0)
+    {
+        if(str[0] == c)
+        {
+            num++;
+        }
+        str++;
+    }
+    return num;
+}
+
 uint64_t convInt(char* input)
 {
     uint64_t total = 0;
