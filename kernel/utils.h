@@ -26,12 +26,14 @@ static inline uint16_t inw(uint16_t port)
 }
 
 int compareArray(char* str1, char* str2);
+int compareArraySize(char* str1, char* str2, int amount);
 
 void memSet(uint8_t* addr, char c, size_t amount);
 
 void strCopy(char* str, char* addr);
 size_t strLen(char* str);
 void split(char* in, char splitter, char* out1, char* out2);
+void splitN(char* in, char splitter, char* out1, char* out2);
 
 uint64_t convInt(char* input);
 

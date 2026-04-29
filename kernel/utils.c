@@ -20,6 +20,30 @@ int compareArray(char* str1, char* str2)
     return 0;
 }
 
+int compareArraySize(char* str1, char* str2, int amount)
+{
+    for(int i = 0; i < amount; i++)
+    {
+        if(str1[i] == str2[i])
+        {
+            if(str1[i] == 0)
+            {
+                return 1;
+            }
+            continue;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    if(str1[amount - 1] == str2[amount - 1])
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void memSet(uint8_t* addr, char c, size_t amount)
 {
     for(size_t i = 0; i < amount; i++)
@@ -76,6 +100,32 @@ void split(char* in, char splitter, char* out1, char* out2)
     }
     out1[0] = 0;
     out2[0] = 0;
+    return;
+}
+void splitN(char* in, char splitter, char* out1, char* out2)
+{
+    int hasSplit = 0;
+    while(in[0] != 0)
+    {
+        if(hasSplit == 1)
+        {
+            out2[0] = in[0];
+
+            out2++;
+            in++;
+            continue;
+        }
+        else if(in[0] == splitter)
+        {
+            hasSplit = 1;
+            in++;
+            continue;
+        }
+        out1[0] = in[0];
+        out1++;
+        in++;
+    }
+
     return;
 }
 
