@@ -127,7 +127,7 @@ void shell(char* input)
         {
             print("Malloc fail\n");
         }
-        dirEntry_t* entry = findFile("TEST    TXT");
+        dirEntry_t* entry = findFile("TEST.TXT");
         if(!entry)
         {
             print("File not found\n");

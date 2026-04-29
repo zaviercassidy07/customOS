@@ -56,6 +56,12 @@ dirEntry_t* findFile(char* name)
         dirEntry_t* entries = (dirEntry_t*)clusterBuf;
         int count = (bs->sectorsPerCluster * bs->bytesPerSector) / 32; // directory is 32 bytes, so this is dirs per cluster
 
+        char fName[8];
+        char ext[3];
+        memSet(fName, 0, 8);
+        memSet(ext, 0, 3);
+        splitN(name, '.', fName, ext);
+
         for(int i = 0; i < count; i++)
         {
             if(entries[i].name[0] == 0x00) // if no more entries
@@ -72,18 +78,7 @@ dirEntry_t* findFile(char* name)
                 continue;
             }
 
-            char fullName[12];
-            memSet((uint8_t*)fullName, ' ', 11);
-            fullName[11] = 0;
-            for(int j = 0; j < 8; j++)
-            {
-                fullName[j] = entries[i].name[j];
-            }
-            for(int j = 0; j < 3; j++)
-            {
-                fullName[8 + j] = entries[i].ext[j];
-            }
-            if(compareArray(fullName, name) == 1)
+            if(compareArraySize(fName, entries[i].name, 8) == 1 && compareArraySize(ext, entries[i].ext, 3) == 1)
             {
                 foundEntry = entries[i];
                 free((uintptr_t)clusterBuf);

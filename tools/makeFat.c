@@ -140,7 +140,7 @@ int main()
     bs->bootSignature = 0x29; // 29 indicates that next couple values are present
     bs->volumeID = 0x69696969;
     memcpy(bs->volumeLabel, "F32 TST VOL", 11);
-    memcpy(bs->fsType, "FAT32   ", 8);
+    memcpy(bs->fsType, "FAT32", 5);
 
     // if boot sector, write the boot sig here
     // we're not doing boot sector so don't worry about it
@@ -175,7 +175,7 @@ int main()
     dirEntry_t* entry = (dirEntry_t*)dirBuf;
 
     // Root contains the file info, clusterHigh/low is address of actual data
-    memcpy(entry->name, "TEST    ", 8);
+    memcpy(entry->name, "TEST", 4);
     memcpy(entry->ext, "TXT", 3);
     entry->attributes = 0x20; // code for normal file
     entry->createTime = 0x0000; // none of this metadata really matters
