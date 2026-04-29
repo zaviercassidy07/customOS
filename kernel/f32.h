@@ -62,7 +62,7 @@ void initF32(uint32_t start);
 uint32_t clusterToSector(uint32_t cluster);
 uint32_t nextCluster(uint32_t cluster);
 
-dirEntry_t* findFile(char* name);
+dirEntry_t* findFile(char* name, int startCluster);
 void readFile(dirEntry_t* entry, uint8_t* dest);
 
 #endif

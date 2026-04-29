@@ -120,6 +120,11 @@ void shell(char* input)
         printHex(out, 1);
         print("\n");
     }
+    else if(compareArray(command, "count") == 1)
+    {
+        printHex((uint64_t)count(options, '/'), 1);
+        print("\n");
+    }
     else if(compareArray(command, "fat") == 1)
     {
         uint8_t* fileBuf = (uint8_t*)malloc(512);
@@ -127,7 +132,7 @@ void shell(char* input)
         {
             print("Malloc fail\n");
         }
-        dirEntry_t* entry = findFile("TEST.TXT");
+        dirEntry_t* entry = findFile("TEST.TXT", 0);
         if(!entry)
         {
             print("File not found\n");

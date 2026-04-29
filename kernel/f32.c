@@ -42,11 +42,19 @@ uint32_t nextCluster(uint32_t cluster)
     return val;
 }
 
-dirEntry_t* findFile(char* name)
+dirEntry_t* findFile(char* name, int startCluster) // 0 is placeholder for route cluster in start
 {
     uint8_t* clusterBuf = (uint8_t*)malloc(4096);
 
-    uint32_t cluster = rootCluster;
+    uint32_t cluster;
+    if(startCluster == 0)
+    {
+        cluster = rootCluster;
+    }
+    else
+    {
+        cluster = startCluster;
+    }
 
     while(cluster < 0x0FFFFFF8)
     {
