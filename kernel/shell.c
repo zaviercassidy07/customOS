@@ -120,6 +120,26 @@ void shell(char* input)
         printHex(out, 1);
         print("\n");
     }
+    else if(compareArray(command, "fat") == 1)
+    {
+        uint8_t* fileBuf = (uint8_t*)malloc(512);
+        if(!fileBuf)
+        {
+            print("Malloc fail\n");
+        }
+        dirEntry_t* entry = findFile("TEST    TXT");
+        if(!entry)
+        {
+            print("File not found\n");
+        } 
+        else
+        {
+            readFile(entry, fileBuf);
+            print(fileBuf);
+            print("\n");
+        }
+        free((uintptr_t)fileBuf);
+    }
     else
     {
         print("Not recognized\n");

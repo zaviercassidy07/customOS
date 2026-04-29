@@ -8,6 +8,8 @@
 #include "utils.h"
 #include "keyboardHandler.h"
 
+#include "f32.h"
+
 #include "drivers/ata.h"
 
 void shell(char* input);

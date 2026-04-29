@@ -2,6 +2,7 @@
 
 #include "printUtils.h"
 #include "memUtils.h"
+#include "f32.h"
 
 #include "keyboardHandler.h"
 #include "shell.h"
@@ -16,6 +17,7 @@ void main()
 {
     initPMM();
     initHeap();
+    initF32(105);
 
     savedScreen = (uint8_t*)malloc(4002);
 
