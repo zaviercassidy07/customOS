@@ -31,6 +31,7 @@ int compareArraySize(char* str1, char* str2, int amount);
 void memSet(uint8_t* addr, char c, size_t amount);
 
 void strCopy(char* str, char* addr);
+void strCopySize(char* str, char* addr, int amount);
 size_t strLen(char* str);
 void split(char* in, char splitter, char* out1, char* out2);
 void splitN(char* in, char splitter, char* out1, char* out2);

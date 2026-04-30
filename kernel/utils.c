@@ -63,6 +63,23 @@ void strCopy(char* str, char* addr)
     addr[0] = 0;
     return;
 }
+void strCopySize(char* str, char* addr, int amount)
+{
+    int i = 0;
+    while(str[0] != 0)
+    {
+        if(i == amount)
+        {
+            return;
+        }
+        addr[0] = str[0];
+        str++;
+        addr++;
+        i++;
+    }
+    addr[0] = 0;
+    return;
+}
 
 size_t strLen(char* str)
 {
