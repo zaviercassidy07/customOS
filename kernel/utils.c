@@ -65,19 +65,12 @@ void strCopy(char* str, char* addr)
 }
 void strCopySize(char* str, char* addr, int amount)
 {
-    int i = 0;
-    while(str[0] != 0)
+    for(int i = 0; i < amount; i++)
     {
-        if(i == amount)
-        {
-            return;
-        }
         addr[0] = str[0];
         str++;
         addr++;
-        i++;
     }
-    addr[0] = 0;
     return;
 }
 
