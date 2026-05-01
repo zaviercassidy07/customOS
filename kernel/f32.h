@@ -61,8 +61,12 @@ void initF32(uint32_t start);
 
 uint32_t clusterToSector(uint32_t cluster);
 uint32_t nextCluster(uint32_t cluster);
+uint32_t nextFreeCluster();
 
 dirEntry_t* findFile(char* name, int startCluster);
-void readFile(dirEntry_t* entry, uint8_t* dest);
+void readFile(char* name, uint8_t* dest);
+
+void createFile(char* name);
+void writeFile(char* name, int amount, uint8_t* src);
 
 #endif

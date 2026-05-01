@@ -88,30 +88,24 @@ void shell(char* input)
     }
     else if(compareArray(command, "read") == 1)
     {
-        char* read = (char*)malloc(512);
-        char addrStr[17];
-        char amountStr[17];
-        split(options, ' ', addrStr, amountStr);
+        char* read = (char*)malloc(4096);
+        char name[12];
+        strCopySize(options, name, 12);
 
-        uint64_t addr = convInt(addrStr);
-        uint64_t amount = convInt(amountStr);
-
-        readBytes(addr, amount, (uint8_t*)read);
+        readFile(name, read);
         print("Data: "); print(read); print("\n");
         free((uintptr_t)read);
     }
     else if(compareArray(command, "write") == 1)
     {
         char* write = (char*)malloc(128);
-        char addrStr[17];
-        split(options, ' ', addrStr, write);
-
-        uint64_t addr = convInt(addrStr);
+        char name[12];
+        split(options, ' ', name, write);
 
         size_t bytes = strLen(write);
 
-        writeBytes(addr, bytes, (uint8_t*)write);
-        print("Stored: "); print(write); print("\n");
+        writeFile(name, bytes, write);
+        print("Attempted to store: "); print(write); print("\n");
         free((uintptr_t)write);
     }
     else if(compareArray(command, "conv") == 1)
@@ -125,25 +119,10 @@ void shell(char* input)
         printHex((uint64_t)count(options, '/'), 1);
         print("\n");
     }
-    else if(compareArray(command, "fat") == 1)
+    else if(compareArray(command, "touch") == 1)
     {
-        uint8_t* fileBuf = (uint8_t*)malloc(512);
-        if(!fileBuf)
-        {
-            print("Malloc fail\n");
-        }
-        dirEntry_t* entry = findFile("TEST.TXT", 0);
-        if(!entry)
-        {
-            print("File not found\n");
-        } 
-        else
-        {
-            readFile(entry, fileBuf);
-            print(fileBuf);
-            print("\n");
-        }
-        free((uintptr_t)fileBuf);
+        createFile(options);
+        print("Done\n");
     }
     else
     {

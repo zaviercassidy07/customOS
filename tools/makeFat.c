@@ -175,8 +175,8 @@ int main()
     dirEntry_t* entry = (dirEntry_t*)dirBuf;
 
     // Root contains the file info, clusterHigh/low is address of actual data
-    memcpy(entry->name, "TEST", 4);
-    memcpy(entry->ext, "TXT", 3);
+    memcpy(entry->name, "test", 4);
+    memcpy(entry->ext, "txt", 3);
     entry->attributes = 0x20; // code for normal file
     entry->createTime = 0x0000; // none of this metadata really matters
     entry->createDate = 0x0000;
