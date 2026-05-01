@@ -7,8 +7,6 @@
 #include "keyboardHandler.h"
 #include "shell.h"
 
-extern char buffer[128];
-
 uint8_t* savedScreen;
 
 statuses_t sysStatus;
